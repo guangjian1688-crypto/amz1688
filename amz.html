@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亚马逊利润计算器 | 2026官方全规则同步</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,sans-serif;margin:0;padding:0}
+body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:20px;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;align-content:flex-start;width:100%;padding:0}
+@media(max-width:768px){.wrap{flex-direction:column;gap:20px}}
+.card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 8px 32px rgba(149,157,165,0.15);transition:all 0.3s ease;box-sizing:border-box;width:50%;margin:0;min-height:calc(100vh - 40px)}
+.card:hover{box-shadow:0 12px 40px rgba(149,157,165,0.2)}
+.input-card{flex:0 0 50%;max-width:50%;align-self:flex-start;min-height:calc(100vh - 40px);height:fit-content}
+.result-card{flex:0 0 50%;max-width:50%;height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#4096ff #f8fafc;align-self:flex-start;padding-top:28px;padding-bottom:28px}
+.result-card::-webkit-scrollbar{width:6px}
+.result-card::-webkit-scrollbar-track{background:#f8fafc;border-radius:10px;margin:20px 0}
+.result-card::-webkit-scrollbar-thumb{background-color:#4096ff;border-radius:10px;border:2px solid #f8fafc}
+.title{text-align:center;font-size:20px;font-weight:700;color:#2d3748;margin:0 0 24px 0;position:relative;padding-bottom:12px;line-height:1.2;height:48px;display:flex;align-items:center;justify-content:center}
+.title::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60px;height:3px;background:linear-gradient(90deg,#4096ff 0%,#00a86b 100%);border-radius:3px}
+.form-group-title{font-size:14px;font-weight:600;color:#4096ff;margin:20px 0 12px 0;display:flex;align-items:center;gap:8px}
+.form-group-title:first-of-type{margin-top:0}
+.form-group-title::before{content:'';width:4px;height:16px;background:#4096ff;border-radius:2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+.form-row-three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
+.form-row-four{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.form-row-five{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.item{display:flex;flex-direction:column;height:100%}
+.label{font-size:13px;color:#4a5568;margin-bottom:6px;font-weight:500;display:flex;align-items:center;gap:4px}
+.label .tip-icon{color:#4096ff;font-size:11px}
+input,select{width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:12px;font-size:14px;outline:none;background:#f8fafc;transition:all 0.2s ease;flex:1;height:44px;box-sizing:border-box}
+input:focus,select:focus{border-color:#4096ff;background:#fff;box-shadow:0 0 0 3px rgba(64,150,255,0.1)}
+button{width:100%;padding:14px;background:linear-gradient(90deg,#4096ff 0%,#297bdd 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;margin-top:20px;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 12px rgba(64,150,255,0.25)}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(64,150,255,0.35)}
+button:active{transform:translateY(0)}
+.tooltip{position:fixed;background:rgba(0,0,0,0.85);color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.5;max-width:280px;z-index:9999;display:none;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.section{margin-top:24px;background:#f8fafc;padding:18px;border-radius:16px;border:1px solid #f0f4f9;box-sizing:border-box}
+.section:first-child{margin-top:0}
+.section-title{font-size:15px;font-weight:600;color:#4096ff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:4px;height:18px;background:#4096ff;border-radius:2px}
+.row{display:flex;justify-content:space-between;font-size:14px;padding:10px 12px;margin:6px 0;background:#ffffff;border-radius:10px;transition:all 0.2s ease;border:1px solid #f0f4f9;align-items:center;box-sizing:border-box;line-height:1.4}
+.row:hover{transform:translateX(2px);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.tip-text{cursor:help;color:#2d3748;font-weight:500}
+.neg{color:#e53935;font-weight:600}
+.pos{color:#00a86b;font-weight:600}
+.warm{color:#ff9800;font-weight:600}
+.highlight{font-weight:600;color:#4096ff}
+.chart-box{margin-top:24px;padding:20px;border:1px solid #e2e8f0;border-radius:16px;background:#ffffff;box-shadow:0 4px 16px rgba(0,0,0,0.05);box-sizing:border-box}
+#costChart{width:100% !important;height:260px !important}
+.unit{margin-left:4px;font-size:12px;color:#718096;font-weight:normal}
+.return-tip{cursor:help}
+.input-tip{cursor:help;position:relative}
+.warm-txt{color:#666;font-size:12px;margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:8px;border-left:3px solid #ff9800;box-sizing:border-box}
+.stock-warning{background:#fff8e1;border-left:4px solid #ff9800;padding:10px 12px;margin-top:10px;border-radius:8px;font-size:12px;color:#e65100;box-sizing:border-box}
+/* 新增密码弹窗样式 */
+.password-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center}
+.password-box{background:#fff;padding:30px;border-radius:16px;width:90%;max-width:400px;text-align:center}
+.password-box h3{margin-bottom:20px;color:#2d3748;font-size:18px}
+.password-input{margin-bottom:15px}
+.error-tip{color:#e53935;font-size:12px;margin-bottom:15px;display:none}
+/* 新增ACOS提示样式 */
+.acos-tip {
+    position: relative;
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+}
+.acos-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    color: white;
+    font-size: 10px;
+    text-align: center;
+    line-height: 14px;
+    margin-left: 4px;
+    font-weight: bold;
+}
+.acos-icon.neg { background-color: #e53935; }
+.acos-icon.warm { background-color: #ff9800; }
+.acos-icon.pos { background-color: #00a86b; }
+/* 新增TACOS提示样式 - 增加加粗 + 颜色同步 */
+.tacos-tip {
+    position: relative;
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    font-weight: bold; /* TACOS数值加粗 */
+}
+.tacos-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    color: white;
+    font-size: 10px;
+    text-align: center;
+    line-height: 14px;
+    margin-left: 4px;
+    font-weight: bold;
+}
+.tacos-icon.excellent { background-color: #00796b; } /* 深绿 */
+.tacos-icon.good { background-color: #43a047; } /* 浅绿 */
+.tacos-icon.warning { background-color: #ff9800; } /* 橙色 */
+.tacos-icon.poor { background-color: #e53935; } /* 红色 */
+/* TACOS数值颜色和图标背景色同步 */
+.tacos-tip.excellent { color: #00796b; }
+.tacos-tip.good { color: #43a047; }
+.tacos-tip.warning { color: #ff9800; }
+.tacos-tip.poor { color: #e53935; }
+/* 原有广告建议样式（保留但隐藏） */
+.ad-suggestion{display:none !important;}
+@media(max-width:768px){
+.form-row-three{grid-template-columns:1fr 1fr}
+.form-row-three .item:nth-child(3){grid-column:1/-1}
+.form-row-four,.form-row-five{grid-template-columns:1fr 1fr}
+.input-card,.result-card{padding:20px;max-width:100%;flex:none;width:100%;min-height:auto;height:auto}
+.title{font-size:18px;margin-bottom:20px;height:auto}
+.card{width:100%;min-height:auto;height:auto}
+}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 12px center;background-size:16px}
+.form-divider{height:1px;background:#f0f4f9;margin:8px 0}
+</style>
+</head>
+<body>
+<!-- 新增密码验证弹窗 -->
+<div class="password-modal" id="passwordModal">
+  <div class="password-box">
+    <h3>请输入访问密码</h3>
+    <input type="password" id="passwordInput" class="password-input" placeholder="请输入密码">
+    <div class="error-tip" id="passwordError">密码错误，请重新输入</div>
+    <button id="passwordBtn">确认</button>
+  </div>
+</div>
+
+<div class="wrap" id="calculatorWrap" style="display:none;">
+<div class="card input-card">
+<div class="title">📦 参数输入</div>
+<div class="form-group-title">基础物流参数</div>
+<div class="form-row">
+<div class="item"><div class="label">长(cm)</div><input id="l" placeholder=""></div>
+<div class="item"><div class="label">宽(cm)</div><input id="w" placeholder=""></div>
+</div>
+<div class="form-row">
+<div class="item"><div class="label">高(cm)</div><input id="h" placeholder=""></div>
+<div class="item"><div class="label">实重(kg)</div><input id="m" placeholder=""></div>
+</div>
+<div class="form-row">
+<div class="item"><div class="label">头程单价(元/kg)</div><input id="shipPrice" placeholder=""></div>
+<div class="item"></div>
+</div>
+<div class="form-group-title">价格基础参数</div>
+<div class="form-row">
+<div class="item"><div class="label">采购价(¥)</div><input id="cost" placeholder=""></div>
+<div class="item"><div class="label">售价($)</div><input id="price" placeholder=""></div>
+</div>
+<div class="form-group-title">广告流量参数</div>
+<div class="form-row-three">
+<div class="item"><div class="label">CPC($)</div><input id="cpc" placeholder=""></div>
+<div class="item"><div class="label">广告日预算($)</div><input id="budget"></div>
+<div class="item"><div class="label">自然流量占比(%)</div><input id="naturalRate"></div>
+</div>
+<div class="form-row">
+<div class="item"><div class="label">转化率(%)</div><input id="cvr" placeholder=""></div>
+<div class="item"></div>
+</div>
+<div class="form-group-title">费率相关参数</div>
+<div class="form-row-four">
+<div class="item"><div class="label">折扣率(%)</div><input id="discount"></div>
+<div class="item">
+<div class="label return-tip" data-tip="2026规则：佣金退80%、FBA配送费退50%；超过15%退货率加收处理费"> 退货率(%) <span class="tip-icon">ⓘ</span></div>
+<input id="returnRate">
+</div>
+<div class="item"><div class="label">汇率</div><input id="rateEx"></div>
+<div class="item"><div class="label">佣金比例(%)</div><input id="rateCom"></div>
+</div>
+<div class="form-group-title">入库方式&库存周转</div>
+<div class="form-row">
+<div class="item">
+<div class="label input-tip" data-tip="2026标准： 1. 多仓分货(4+仓库)：免配置费，但头程运费更高 2. 部分分货：按重量阶梯收费（小号标准$0.22/件、大号标准≤1lb$0.30/件、大号标准>1lb$0.45/件、大件$0.65/件） 3. 单点入库：部分分货费用×1.5倍（例：小号标准$0.33/件、大号标准≤1lb$0.45/件）"> 入库配置方式 <span class="tip-icon">ⓘ</span></div>
+<select id="placementType">
+<option value="multi" selected>多仓分货 ($0.00)</option>
+<option value="partial">部分分货 (按重量阶梯)</option>
+<option value="single">单点入库 (按重量阶梯×1.5)</option>
+</select>
+</div>
+<div class="item">
+<div class="label input-tip" data-tip="2026亚马逊仓储费用规则： 1. 库存周转周数<4周：低库存水平，仓储费×1.5倍 2. 库存周转周数4-22周：正常区间，无附加费 3. 库存周转周数22-36周：超龄库存，仓储费×2倍 4. 库存周转周数>36周：严重超龄，仓储费×3倍"> 库存周转区间 <span class="tip-icon">ⓘ</span></div>
+<select id="inventoryCycle">
+<option value="3|1.5">低库存(<4周) - 系数×1.5</option>
+<option value="12|1" selected>合理区间(4-22周) - 系数×1</option>
+<option value="24|2">超龄(22-36周) - 系数×2</option>
+<option value="40|3">严重超龄(>36周) - 系数×3</option>
+</select>
+<input type="hidden" id="inventoryWeeks" value="12">
+<input type="hidden" id="inventoryCoeff" value="1">
+</div>
+</div>
+<div class="form-row">
+<div class="item">
+<div class="label input-tip" data-tip="勾选则按旺季计算仓储费+FBA旺季溢价$0.25"> 是否旺季 (10-12月) <span class="tip-icon">ⓘ</span></div>
+<select id="peakSeason">
+<option value="false" selected>淡季</option>
+<option value="true">旺季</option>
+</select>
+</div>
+<div class="item"></div>
+</div>
+<button id="calcBtn">🚀 立即计算</button>
+<div id="warningMessage" class="warm-txt" style="display: none;"></div>
+</div>
+<div class="card result-card">
+<div class="title">📊 利润分析报告</div>
+<div id="result"></div>
+<div class="chart-box" id="chartWrap" style="display:none;">
+<div class="section-title">成本构成 & 单件利润</div>
+<canvas id="costChart"></canvas>
+</div>
+</div>
+</div>
+<div id="formulaTip" class="tooltip"></div>
+<script>
+// 配置密码
+const CORRECT_PASSWORD = "80231016";
+const SAVE_KEY = "amz_profit_data";
+let costChart = null;
+const inputOrder = ["l","w","h","m","shipPrice","cost","price","cpc","budget","naturalRate","cvr","discount","returnRate","rateEx","rateCom","placementType","inventoryCycle","peakSeason"];
+const REFUND_FEE = 0.30;
+const FUEL_RATE = 0.035;
+const LOW_PRICE_DISCOUNT = 0.86;
+const RETURN_THRESHOLD = 15;
+const RETURN_PROCESS_FEE_BASE = 1.78;
+const RETURN_PROCESS_FEE_MAX = 2.20;
+const PEAK_SEASON_PREMIUM = 0.25;
+const REFUND_FEE_CAP = 5;
+const STORAGE_WARNING_WEEKS = 22;
+const formulaMap = {
+"退货率":"退货率超过15%加收$1.78-$2.20退货处理费；仅均摊退货额外损耗，仓储/基础费用不减免",
+"退货处理费":"退货率>15%时收取，基础$1.78，最高$2.20，按超出比例阶梯计算",
+"退货单件损耗":"(采购+头程全损) + FBA配送费50%损失 + 佣金20%损失(最高$5) + $0.30退款费 + 退货处理费 × 退货率",
+"FBA配送费":"2026.4官方阶梯费率 + 3.5%燃油附加费 + <$10售价减免$0.86 + 10-12月旺季溢价$0.25",
+"单件总成本":"采购+头程+FBA配送费+仓储费+佣金+退货处理费（全额扣除）",
+"单件纯利润":"折后售价 - 单件总成本 - 退货单件损耗",
+"销售利润率":"(单件纯利润 ÷ 折后售价) × 100%",
+"投产比 (利润/硬成本)":"(单件纯利润×汇率 ÷ (采购+头程人民币成本)) × 100%",
+"ACOS":"(CPC/转化率) ÷ 折后售价 × 100%",
+"TACOS":"广告总花费 ÷ (广告销售额+自然销售额) × 100%",
+"保本最低售价":"(采购+头程+FBA+仓储+退货损失) ÷ (1 - 佣金比例×(1+0.2×退货率)) ÷ (1-折扣率)",
+"入库配置费":"多仓分货$0/部分分货(按重量阶梯)/单点入库(按重量阶梯×1.5)",
+"仓储费":"基础仓储费（立方英尺×单价） × 库存周转系数(<4周×1.5/4-22周×1/22-36周×2/>36周×3) + 入库配置费",
+"计费重量":"体积重(长×宽×高/6000)与实重取最大值(kg)；体积重(长×宽×高/139)与实重取最大值(lb)",
+"头程运费":"计费重量(kg) × 头程单价(元/kg)",
+"折后售价":"售价 × (1 - 折扣率)",
+"广告点击":"广告日预算 ÷ CPC（单次点击成本）",
+"自然点击":"总点击量 × 自然流量占比；总点击量=广告点击 ÷ (1-自然流量占比)",
+"总点击量":"广告点击 + 自然点击；无自然流量时=广告点击",
+"每单需点击":"1 ÷ 转化率（例：转化率10%则每单需10次点击）",
+"日出单量":"总点击量 × 转化率",
+"单件纯利(扣除广告)":"单件纯利润 - 单均广告花费（广告日预算÷日出单量）",
+"日利润(去广告)":"(单件纯利润×日出单量) - 广告日预算",
+"去广告投产比":"(日利润(去广告)×汇率 ÷ (硬成本×日出单量)) × 100%",
+"盈亏平衡 ACOS (生死线)":"单件利润 ÷ 折后售价 × 100%，当实际ACOS等于该值时净利润为0"
+};
+
+// 新增密码验证函数
+function checkPassword() {
+  const passwordInput = document.getElementById("passwordInput");
+  const passwordError = document.getElementById("passwordError");
+  const passwordModal = document.getElementById("passwordModal");
+  const calculatorWrap = document.getElementById("calculatorWrap");
+  
+  // 新增：空值验证
+  if (!passwordInput.value.trim()) {
+    passwordError.innerText = "请输入密码";
+    passwordError.style.display = "block";
+    setTimeout(() => {
+      passwordError.style.display = "none";
+    }, 3000);
+    return;
+  }
+  
+  if (passwordInput.value === CORRECT_PASSWORD) {
+    // 密码正确，隐藏弹窗，显示计算器
+    passwordModal.style.display = "none";
+    calculatorWrap.style.display = "flex";
+    // 初始化计算器
+    initCalculator();
+  } else {
+    // 密码错误，显示错误提示
+    passwordError.innerText = "密码错误，请重新输入";
+    passwordError.style.display = "block";
+    // 3秒后隐藏错误提示
+    setTimeout(() => {
+      passwordError.style.display = "none";
+    }, 3000);
+    // 清空输入框并聚焦
+    passwordInput.value = "";
+    passwordInput.focus();
+  }
+}
+
+// 初始化计算器函数
+function initCalculator() {
+    loadData();
+    bindAutoSave();
+    bindEnterNext(); // 优先绑定回车事件
+    bindInputFilter();
+    bindFocusSelectAll();
+    bindReturnLabelTip();
+    bindInputLabelTip();
+    bindInventoryCycleEvent();
+    // 绑定计算按钮点击事件
+    document.getElementById('calcBtn').addEventListener('click', calc);
+    // 初始计算
+    setTimeout(() => {
+        calc();
+    }, 100);
+}
+
+// 页面加载完成后立即绑定密码相关事件
+document.addEventListener('DOMContentLoaded', function() {
+  // 聚焦密码输入框
+  const passwordInput = document.getElementById("passwordInput");
+  if (passwordInput) {
+    passwordInput.focus();
+  }
+  
+  // 绑定密码输入框回车事件
+  passwordInput.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.keyCode === 13) {
+      e.preventDefault();
+      checkPassword();
+    }
+  });
+  
+  // 绑定确认按钮点击事件
+  const passwordBtn = document.getElementById("passwordBtn");
+  if (passwordBtn) {
+    passwordBtn.addEventListener("click", checkPassword);
+  }
+});
+
+function bindInventoryCycleEvent() {
+    const cycleSelect = document.getElementById('inventoryCycle');
+    const weeksInput = document.getElementById('inventoryWeeks');
+    const coeffInput = document.getElementById('inventoryCoeff');
+    
+    cycleSelect.addEventListener('change', function() {
+        const [weeks, coeff] = this.value.split('|');
+        weeksInput.value = weeks;
+        coeffInput.value = coeff;
+        saveData();
+        calc();
+    });
+    
+    const currentWeeks = weeksInput.value;
+    const options = cycleSelect.options;
+    for(let i = 0; i < options.length; i++) {
+        const [weekVal] = options[i].value.split('|');
+        if(weekVal === currentWeeks) {
+            cycleSelect.selectedIndex = i;
+            break;
+        }
+    }
+}
+
+function bindInputLabelTip(){
+    const inputTips = document.querySelectorAll('.input-tip');
+    const tip = document.getElementById("formulaTip");
+    if(!tip) return;
+    
+    inputTips.forEach(label => {
+        label.addEventListener('mouseover',function(e){
+            tip.innerText = this.dataset.tip || "参数说明";
+            tip.style.display = "block";
+            tip.style.left = (e.clientX + 10) + "px";
+            tip.style.top = (e.clientY - 5) + "px";
+        });
+        label.addEventListener('mousemove',function(e){
+            tip.style.left = (e.clientX + 10) + "px";
+            tip.style.top = (e.clientY - 5) + "px";
+        });
+        label.addEventListener('mouseout',function(){
+            tip.style.display = "none";
+        });
+    });
+}
+
+function bindInputFilter(){
+    document.querySelectorAll('input').forEach(input => {
+        if(input.type === 'hidden') return;
+        
+        input.addEventListener('input', function(){
+            // 新增：如果输入为空，直接设置为空字符串
+            if (this.value.trim() === '') {
+                this.value = '';
+                return;
+            }
+            
+            let val = this.value.replace(/[^0-9.]/g, '');
+            let parts = val.split('.');
+            
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+            if (val.startsWith('.') && val.length > 1) val = '0' + val;
+            
+            if(this.id === 'returnRate') {
+                val = Math.min(100, parseFloat(val) || 0).toString();
+                if(val.includes('.')) val = val.split('.')[0];
+            }
+            
+            this.value = val;
+        })
+    })
+}
+
+function bindFocusSelectAll(){
+    document.querySelectorAll('input').forEach(input => {
+        if(input.type === 'hidden') return;
+        
+        input.addEventListener('focus', function(){
+            this.select();
+        })
+    })
+}
+
+function bindReturnLabelTip(){
+    const returnLabel = document.querySelector('.return-tip');
+    const tip = document.getElementById("formulaTip");
+    
+    if(returnLabel && tip){
+        returnLabel.addEventListener('mouseover',function(e){
+            tip.innerText = this.dataset.tip + "\n超过15%将加收$1.78-$2.20退货处理费";
+            tip.style.left = (e.clientX + 10) + "px";
+            tip.style.top = (e.clientY - 5) + "px";
+            tip.style.display = "block";
+        });
+        returnLabel.addEventListener('mousemove',function(e){
+            tip.style.left = (e.clientX + 10) + "px";
+            tip.style.top = (e.clientY - 5) + "px";
+        });
+        returnLabel.addEventListener('mouseout',function(){
+            tip.style.display = "none";
+        });
+    }
+}
+
+// 【核心修复1】重构回车键跳转逻辑 - 解决无法自动跳转问题
+function bindEnterNext(){
+    // 统一的回车处理逻辑
+    function handleEnterKey(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) { // 兼容keyCode和key
+            e.preventDefault(); // 阻止默认行为（如表单提交）
+            e.stopPropagation(); // 阻止事件冒泡
+            
+            const currentId = this.id;
+            const currentIndex = inputOrder.indexOf(currentId);
+            
+            // 如果是最后一个输入项，执行计算
+            if (currentIndex === inputOrder.length - 1) {
+                calc();
+                return;
+            }
+            
+            // 找到下一个输入项并聚焦
+            const nextId = inputOrder[currentIndex + 1];
+            const nextEl = document.getElementById(nextId);
+            if(nextEl) {
+                // 确保元素可聚焦
+                nextEl.focus();
+                // 选中输入框内容（保持原有体验）
+                if(nextEl.tagName === 'INPUT' && nextEl.type !== 'hidden') {
+                    nextEl.select();
+                }
+                // 如果是下拉框，触发点击展开
+                else if(nextEl.tagName === 'SELECT') {
+                    nextEl.click();
+                }
+            }
+        }
+    }
+    
+    // 先移除所有已存在的keydown事件，避免重复绑定
+    inputOrder.forEach((id) => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.removeEventListener('keydown', handleEnterKey);
+            el.addEventListener('keydown', handleEnterKey);
+        }
+    });
+}
+
+function bindResultTip() {
+    document.querySelectorAll(".tip-text").forEach(el => {
+        el.removeEventListener('mouseover', tipHandler);
+        el.removeEventListener('mouseout', tipHide);
+        el.addEventListener('mouseover', tipHandler);
+        el.addEventListener('mouseout', tipHide);
+    });
+    
+    // 新增：绑定ACOS提示的悬浮事件
+    document.querySelectorAll(".acos-tip").forEach(el => {
+        el.removeEventListener('mouseover', acosTipHandler);
+        el.removeEventListener('mouseout', tipHide);
+        el.addEventListener('mouseover', acosTipHandler);
+        el.addEventListener('mouseout', tipHide);
+    });
+    
+    // 新增：绑定TACOS提示的悬浮事件
+    document.querySelectorAll(".tacos-tip").forEach(el => {
+        el.removeEventListener('mouseover', tacosTipHandler);
+        el.removeEventListener('mouseout', tipHide);
+        el.addEventListener('mouseover', tacosTipHandler);
+        el.addEventListener('mouseout', tipHide);
+    });
+    
+    function tipHandler(e) {
+        const tip = document.getElementById("formulaTip");
+        if(!tip) return;
+        
+        const text = e.target.closest('.tip-text')?.innerText.trim() || "";
+        tip.innerText = formulaMap[text] || "2026亚马逊官方计费规则";
+        tip.style.left = (e.clientX + 10) + "px";
+        tip.style.top = (e.clientY - 5) + "px";
+        tip.style.display = "block";
+    }
+    
+    // ACOS提示专属处理函数
+    function acosTipHandler(e) {
+        const tip = document.getElementById("formulaTip");
+        if(!tip || !this.dataset.tip) return;
+        
+        tip.innerText = this.dataset.tip;
+        tip.style.left = (e.clientX + 10) + "px";
+        tip.style.top = (e.clientY - 5) + "px";
+        tip.style.display = "block";
+    }
+    
+    // TACOS提示专属处理函数
+    function tacosTipHandler(e) {
+        const tip = document.getElementById("formulaTip");
+        if(!tip || !this.dataset.tip) return;
+        
+        tip.innerText = this.dataset.tip;
+        tip.style.left = (e.clientX + 10) + "px";
+        tip.style.top = (e.clientY - 5) + "px";
+        tip.style.display = "block";
+    }
+    
+    function tipHide() {
+        const tip = document.getElementById("formulaTip");
+        if(tip) tip.style.display = "none";
+    }
+}
+
+function loadData(){
+    try {
+        let data = localStorage.getItem(SAVE_KEY);
+        if(data){
+            let obj = JSON.parse(data);
+            Object.keys(obj).forEach(k=>{
+                let el = document.getElementById(k);
+                if(el && obj[k] !== undefined && obj[k] !== "") {
+                    if(el.tagName === "SELECT") {
+                        el.value = obj[k];
+                    } else if(el.type === 'hidden') {
+                        el.value = obj[k];
+                    } else {
+                        el.value = obj[k];
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.warn("加载数据失败:", e);
+    }
+}
+
+function saveData(){
+    try {
+        let saveObj = {};
+        document.querySelectorAll("input, select").forEach(el=>{
+            if(el.id) saveObj[el.id] = el.value;
+        });
+        localStorage.setItem(SAVE_KEY, JSON.stringify(saveObj));
+    } catch (e) {
+        console.warn("保存数据失败:", e);
+    }
+}
+
+function bindAutoSave(){
+    document.querySelectorAll("input, select").forEach(el=>{
+        el.addEventListener('input', saveData);
+        el.addEventListener('change', saveData);
+    });
+}
+
+function calc() {
+    try {
+        saveData();
+        
+        // 所有变量都添加let声明，避免未声明变量导致的错误
+        let 长 = Math.max(0, parseFloat(document.getElementById("l").value) || 0);
+        let 宽 = Math.max(0, parseFloat(document.getElementById("w").value) || 0);
+        let 高 = Math.max(0, parseFloat(document.getElementById("h").value) || 0);
+        let 实重 = Math.max(0, parseFloat(document.getElementById("m").value) || 0);
+        let 头程单价 = Math.max(0, parseFloat(document.getElementById("shipPrice").value) || 0);
+        let 采购_人民币 = Math.max(0, parseFloat(document.getElementById("cost").value) || 0);
+        let 售价_美元 = Math.max(0, parseFloat(document.getElementById("price").value) || 0);
+        let 折扣率 = Math.min(0.95, Math.max(0, (parseFloat(document.getElementById("discount").value) || 0) / 100));
+        let 佣金比例 = Math.min(0.3, Math.max(0, (parseFloat(document.getElementById("rateCom").value) || 0) / 100));
+        let 汇率 = Math.max(0.01, parseFloat(document.getElementById("rateEx").value) || 7.2);
+        let 退货率 = Math.max(0, (parseFloat(document.getElementById("returnRate").value) || 0) / 100);
+        let CPC = Math.max(0.01, parseFloat(document.getElementById("cpc").value) || 0.01);
+        let 转化率 = Math.min(0.8, Math.max(0, (parseFloat(document.getElementById("cvr").value) || 0) / 100));
+        let 广告预算 = Math.max(0, parseFloat(document.getElementById("budget").value) || 0);
+        let 自然流量占比 = Math.min(0.99, Math.max(0, (parseFloat(document.getElementById("naturalRate").value) || 0) / 100));
+        let 入库配置方式 = document.getElementById("placementType").value;
+        let 库存周转周数 = Math.max(1, parseFloat(document.getElementById("inventoryWeeks").value) || 12);
+        let 库存周转系数 = parseFloat(document.getElementById("inventoryCoeff").value) || 1;
+        let 是否旺季 = document.getElementById("peakSeason").value === "true";
+        
+        const warningDiv = document.getElementById("warningMessage");
+        let warnings = [];
+        
+        if(广告预算 === 0 && 自然流量占比 > 0){
+            warnings.push("广告预算为0，自然流量无效");
+        }
+        if(折扣率 >= 1){
+            warnings.push("折扣率不能≥100%，已自动限制为95%");
+            折扣率 = 0.95;
+        }
+        if(退货率 * 100 > RETURN_THRESHOLD){
+            warnings.push(`退货率超过${RETURN_THRESHOLD}%，将加收退货处理费`);
+        }
+        if(库存周转周数 > STORAGE_WARNING_WEEKS){
+            warnings.push(`库存周转超过${STORAGE_WARNING_WEEKS}周，仓储费将翻倍`);
+        }
+        if(库存周转周数 < 4){
+            warnings.push(`库存周转低于4周，可能触发低库存水平费`);
+        }
+        
+        if(warnings.length > 0 && warningDiv){
+            warningDiv.style.display = "block";
+            warningDiv.innerText = "⚠️ " + warnings.join("，");
+        } else if(warningDiv) {
+            warningDiv.style.display = "none";
+        }
+        
+        if(售价_美元 <= 0){
+            document.getElementById("result").innerHTML = `<div class="section"><div class="section-title">⚠️ 错误</div><div class="row">售价必须大于0</div></div>`;
+            document.getElementById("chartWrap").style.display = "none";
+            return;
+        }
+        
+        // 修复尺寸转换精度问题，保留4位小数
+        let 英寸长 = parseFloat((长 / 2.54).toFixed(4));
+        let 英寸宽 = parseFloat((宽 / 2.54).toFixed(4));
+        let 英寸高 = parseFloat((高 / 2.54).toFixed(4));
+        
+        // 修复：排序前先过滤0值，避免尺寸为0导致排序异常
+        let 尺寸数组 = [英寸长, 英寸宽, 英寸高].filter(val => val > 0).sort((a, b) => b - a);
+        // 补充0值，确保数组长度为3
+        while(尺寸数组.length < 3) {
+            尺寸数组.push(0);
+        }
+        let longest = 尺寸数组[0]||0, middle = 尺寸数组[1]||0, shortest = 尺寸数组[2]||0;
+        
+        // 修复重量转换精度
+        let 实重_磅 = parseFloat((实重 * 2.20462).toFixed(4));
+        let 体积重_磅 = parseFloat(((英寸长 * 英寸宽 * 英寸高) / 139).toFixed(4));
+        let 计费重_磅 = Math.max(实重_磅, 体积重_磅);
+        
+        // 修复：进位计算逻辑，避免精度问题
+        let 计费重_磅_进位 = 0;
+        if(计费重_磅 <= 1){
+            计费重_磅_进位 = Math.ceil(计费重_磅 / 0.25) * 0.25;
+        }else{
+            计费重_磅_进位 = Math.ceil(计费重_磅);
+        }
+        // 确保进位后的值是精确的
+        计费重_磅_进位 = parseFloat(计费重_磅_进位.toFixed(2));
+        
+        // 【核心修复：2026亚马逊官方尺寸标准】
+        let isSmallStandard = false;
+        let isLargeStandard = false;
+        let isOversize = false;
+
+        // 1. 小号标准尺寸（Small Standard）
+        // 最长边 ≤ 15 英寸，次长边 ≤ 12 英寸，最短边 ≤ 0.75 英寸，重量 ≤ 1 磅
+        if (longest <= 15 && middle <= 12 && shortest <= 0.75 && 计费重_磅_进位 <= 1) {
+            isSmallStandard = true;
+        }
+        // 2. 大号标准尺寸（Large Standard）
+        // 最长边 ≤ 18 英寸，次长边 ≤ 14 英寸，最短边 ≤ 8 英寸，重量 ≤ 20 磅（且不是小号标准）
+        else if (longest <= 18 && middle <= 14 && shortest <= 8 && 计费重_磅_进位 <= 20) {
+            isLargeStandard = true;
+        }
+        // 3. 大件/超大尺寸（Oversize）
+        else {
+            isOversize = true;
+        }
+
+        // 确定尺寸类型
+        let 尺寸类型 = "";
+        if (isSmallStandard) {
+            尺寸类型 = "小号标准";
+        } else if (isLargeStandard) {
+            尺寸类型 = "大号标准";
+        } else {
+            尺寸类型 = "大件/超大";
+        }
+
+        // 【核心修复：2026 FBA配送费官方标准】
+        let 体积_立方英尺 = parseFloat(((长 * 宽 * 高) / 28316.8).toFixed(6));
+        let 仓储费单价 = (尺寸类型 !== "大件/超大") ? (是否旺季 ? 2.40 : 0.78) : (是否旺季 ? 1.40 : 0.52);
+        let 基础仓储费 = parseFloat((体积_立方英尺 * 仓储费单价 * 库存周转系数).toFixed(4));
+        let 入库费基数 = 0;
+        
+        if (尺寸类型 === "小号标准") {
+            入库费基数 = 0.22;
+        } else if (尺寸类型 === "大号标准") {
+            入库费基数 = (计费重_磅_进位 <= 1) ? 0.30 : 0.45;
+        } else {
+            入库费基数 = 0.65;
+        }
+        
+        let 入库配置费 = 0;
+        if (入库配置方式 === "partial") 入库配置费 = 入库费基数;
+        else if (入库配置方式 === "single") 入库配置费 = parseFloat((入库费基数 * 1.5).toFixed(2));
+        else 入库配置费 = 0;
+        
+        let 仓储费_美元 = parseFloat((基础仓储费 + 入库配置费).toFixed(4));
+        let FBA基础费 = 0;
+        let 折后售价 = parseFloat((售价_美元 * (1 - 折扣率)).toFixed(2));
+
+        // ===== 2026亚马逊FBA配送费官方阶梯（按尺寸+重量）=====
+        if (isSmallStandard) { // 小号标准尺寸
+            if (计费重_磅_进位 <= 0.25) FBA基础费 = 3.10;
+            else if (计费重_磅_进位 <= 0.5) FBA基础费 = 3.18;
+            else FBA基础费 = 3.37; // 0.5-1磅
+        } 
+        else if (isLargeStandard) { // 大号标准尺寸
+            if (计费重_磅_进位 <= 0.25) FBA基础费 = 3.75;
+            else if (计费重_磅_进位 <= 0.5) FBA基础费 = 3.85;
+            else if (计费重_磅_进位 <= 1.0) FBA基础费 = 4.08;
+            else if (计费重_磅_进位 <= 1.5) FBA基础费 = 4.65;
+            else if (计费重_磅_进位 <= 2.0) FBA基础费 = 5.58;
+            else if (计费重_磅_进位 <= 3.0) FBA基础费 = 5.80;
+            else if (计费重_磅_进位 <= 4.0) FBA基础费 = 6.02;
+            else if (计费重_磅_进位 <= 5.0) FBA基础费 = 6.24;
+            else if (计费重_磅_进位 <= 6.0) FBA基础费 = 6.46;
+            else if (计费重_磅_进位 <= 7.0) FBA基础费 = 6.68;
+            else if (计费重_磅_进位 <= 8.0) FBA基础费 = 6.90;
+            else if (计费重_磅_进位 <= 9.0) FBA基础费 = 7.12;
+            else if (计费重_磅_进位 <= 10.0) FBA基础费 = 7.34;
+            else if (计费重_磅_进位 <= 11.0) FBA基础费 = 7.56;
+            else if (计费重_磅_进位 <= 12.0) FBA基础费 = 7.78;
+            else if (计费重_磅_进位 <= 13.0) FBA基础费 = 8.00;
+            else if (计费重_磅_进位 <= 14.0) FBA基础费 = 8.22;
+            else if (计费重_磅_进位 <= 15.0) FBA基础费 = 8.44;
+            else if (计费重_磅_进位 <= 16.0) FBA基础费 = 8.66;
+            else if (计费重_磅_进位 <= 17.0) FBA基础费 = 8.88;
+            else if (计费重_磅_进位 <= 18.0) FBA基础费 = 9.10;
+            else if (计费重_磅_进位 <= 19.0) FBA基础费 = 9.32;
+            else if (计费重_磅_进位 <= 20.0) FBA基础费 = 9.54;
+        } 
+        else { // 大件/超大尺寸
+            if (计费重_磅_进位 <= 1) FBA基础费 = 9.98;
+            else if (计费重_磅_进位 <= 2) FBA基础费 = 10.43;
+            else if (计费重_磅_进位 <= 3) FBA基础费 = 10.88;
+            else if (计费重_磅_进位 <= 4) FBA基础费 = 11.33;
+            else if (计费重_磅_进位 <= 5) FBA基础费 = 11.78;
+            else FBA基础费 = parseFloat((11.78 + (计费重_磅_进位 - 5) * 0.45).toFixed(2));
+        }
+        
+        // 低价减免（< $10 减免 $0.86）
+        if (折后售价 > 0 && 折后售价 < 10) {
+            FBA基础费 = Math.max(0, parseFloat((FBA基础费 - LOW_PRICE_DISCOUNT).toFixed(2)));
+        }
+        // 旺季溢价（+ $0.25）
+        if(是否旺季) FBA基础费 += PEAK_SEASON_PREMIUM;
+        // 燃油附加费（+3.5%）
+        let FBA_美元 = parseFloat((FBA基础费 * (1 + FUEL_RATE)).toFixed(4));
+        
+        let 计费重_kg = parseFloat(Math.max(实重, (长 * 宽 * 高) / 6000).toFixed(4));
+        let 头程_人民币 = parseFloat((计费重_kg * 头程单价).toFixed(2));
+        let 头程_美元 = parseFloat((头程_人民币 / 汇率).toFixed(4));
+        let 采购_美元 = parseFloat((采购_人民币 / 汇率).toFixed(4));
+        let 佣金_美元 = parseFloat((折后售价 * 佣金比例).toFixed(4));
+        
+        let RETURN_PROCESS_FEE = 0;
+        if(退货率 * 100 > RETURN_THRESHOLD) {
+            let 退货率超出绝对值 = (退货率 * 100 - RETURN_THRESHOLD);
+            let 可计费区间 = 100 - RETURN_THRESHOLD;
+            let 退货率超出比例 = 退货率超出绝对值 / 可计费区间;
+            RETURN_PROCESS_FEE = RETURN_PROCESS_FEE_BASE + (RETURN_PROCESS_FEE_MAX - RETURN_PROCESS_FEE_BASE) * 退货率超出比例;
+            RETURN_PROCESS_FEE = Math.min(RETURN_PROCESS_FEE, RETURN_PROCESS_FEE_MAX);
+            RETURN_PROCESS_FEE = parseFloat(RETURN_PROCESS_FEE.toFixed(2));
+        }
+        
+        let 佣金退款管理费 = parseFloat(Math.min(佣金_美元 * 0.2, REFUND_FEE_CAP).toFixed(2));
+        let 正常利润 = parseFloat((折后售价 - 采购_美元 - 头程_美元 - FBA_美元 - 仓储费_美元 - 佣金_美元).toFixed(4));
+        let 单次退货额外损失 = parseFloat((采购_美元 + 头程_美元 + REFUND_FEE + RETURN_PROCESS_FEE + 佣金退款管理费 + (FBA_美元 * 0.5)).toFixed(4));
+        let 单件退货损失 = parseFloat((单次退货额外损失 * 退货率).toFixed(4));
+        let 单价纯利润_美元 = parseFloat((正常利润 - 单件退货损失).toFixed(4));
+        let 销售利润率 = 折后售价 > 0 ? parseFloat(((单价纯利润_美元 / 折后售价) * 100).toFixed(2)) : 0;
+        let 硬成本_人民币 = parseFloat((采购_人民币 + 头程_人民币).toFixed(2));
+        let 投产比 = 硬成本_人民币 > 0 ? parseFloat(((单价纯利润_美元 * 汇率 / 硬成本_人民币) * 100).toFixed(1)) : 0;
+        
+        let 退货固定部分 = 单件退货损失;
+        let 成本基数 = parseFloat((采购_美元 + 头程_美元 + FBA_美元 + 仓储费_美元 + 退货固定部分).toFixed(4));
+        let 系数 = parseFloat((1 - 佣金比例 * (1 + 0.2 * 退货率)).toFixed(4));
+        let 保底售价 = 0;
+        
+        if (系数 > 0 && (1 - 折扣率) > 0) {
+            保底售价 = parseFloat((成本基数 / 系数 / (1 - 折扣率)).toFixed(2));
+        } else {
+            保底售价 = 9999;
+        }
+        
+        let 广告点击 = parseFloat((广告预算 / CPC).toFixed(1));
+        let 总流量 = 广告点击;
+        let 自然点击 = 0;
+        
+        if(广告预算 > 0 && 自然流量占比 < 1){
+            总流量 = parseFloat((广告点击 / (1 - 自然流量占比)).toFixed(1));
+            自然点击 = parseFloat((总流量 * 自然流量占比).toFixed(1));
+        }
+        
+        let 总点击 = parseFloat((广告点击 + 自然点击).toFixed(1));
+        let 每单需点击 = 转化率 > 0 ? parseFloat((1 / 转化率).toFixed(0)) : 0;
+        let 日出单量 = parseFloat((总点击 * 转化率).toFixed(2));
+        let 广告带来订单 = parseFloat((广告点击 * 转化率).toFixed(2));
+        let 自然带来订单 = parseFloat((自然点击 * 转化率).toFixed(2));
+        let 总销售额 = parseFloat((日出单量 * 折后售价).toFixed(2));
+        
+        // ========== 核心修改：新ACOS计算逻辑 ==========
+        let ACOS = 0;
+        if(折后售价 > 0 && 转化率 > 0) {
+            ACOS = parseFloat(((CPC / 转化率) / 折后售价 * 100).toFixed(1));
+        }
+        
+        // ========== 新增：TACOS计算逻辑 ==========
+        let TACOS = 0;
+        if(总销售额 > 0 && 广告预算 > 0) {
+            TACOS = parseFloat(((广告预算 / 总销售额) * 100).toFixed(1));
+        }
+        
+        // ========== 核心修改：ACOS颜色和建议逻辑 ==========
+        let acosColor = "";
+        let adSuggestion = "";
+        let adSuggestionClass = "";
+        
+        if (广告预算 > 0 && 折后售价 > 0) { 
+            // 定义ACOS与销售利润率的差值阈值（±1%视为近似相等）
+            const ACOS_THRESHOLD = 1;
+            const acosDiff = ACOS - 销售利润率;
+            
+            if (acosDiff < -ACOS_THRESHOLD) {
+                // ACOS < 销售利润率 - 盈利（绿色）
+                acosColor = "pos";
+                // 修改：更新为指定的提示文本
+                adSuggestion = "广告正在盈利，建议增加广告预算";
+                adSuggestionClass = "profit";
+            } else if (Math.abs(acosDiff) <= ACOS_THRESHOLD) {
+                // ACOS ≈ 销售利润率 - 盈亏平衡（橙黄色）
+                acosColor = "warm";
+                // 修改：更新为指定的提示文本
+                adSuggestion = "广告盈亏平衡，建议提升转化率或降低 CPC 出价";
+                adSuggestionClass = "balance";
+            } else {
+                // ACOS > 销售利润率 - 亏损（红色）
+                acosColor = "neg";
+                // 修改：更新为指定的提示文本
+                adSuggestion = "广告正在亏损，建议降低 CPC 出价并优化 Listing";
+                adSuggestionClass = "warning";
+            }
+        } else {
+            // 无广告预算时的默认状态
+            acosColor = "warm";
+            adSuggestion = "未设置广告预算";
+            adSuggestionClass = "";
+        }
+        
+        // ========== 新增：TACOS等级判断逻辑 ==========
+        let tacosLevel = "";
+        let tacosColor = "";
+        let tacosTipText = "";
+        
+        if (TACOS < 10) {
+            tacosLevel = "excellent";
+            tacosColor = "excellent";
+            tacosTipText = "优秀";
+        } else if (TACOS >= 10 && TACOS <= 15) {
+            tacosLevel = "good";
+            tacosColor = "good";
+            tacosTipText = "良好";
+        } else if (TACOS > 15 && TACOS <= 25) {
+            tacosLevel = "warning";
+            tacosColor = "warning";
+            tacosTipText = "警戒";
+        } else {
+            tacosLevel = "poor";
+            tacosColor = "poor";
+            tacosTipText = "危险";
+        }
+        
+        let 单均广告花费 = 日出单量 > 0 ? parseFloat((广告预算 / 日出单量).toFixed(4)) : 0;
+        let 单价纯利润_去广告 = parseFloat((单价纯利润_美元 - 单均广告花费).toFixed(4));
+        let 日利润_去广告 = parseFloat(((单价纯利润_美元 * 日出单量) - 广告预算).toFixed(2));
+        let 去广告投产比 = (硬成本_人民币 > 0 && 日出单量 > 0) ? parseFloat(((日利润_去广告 * 汇率 / (硬成本_人民币 * 日出单量)) * 100).toFixed(1)) : 0;
+        
+        // 盈亏平衡ACOS保留计算但不再展示
+        let 盈亏平衡ACOS = 折后售价 > 0 ? parseFloat(((单价纯利润_美元 / 折后售价) * 100).toFixed(1)) : 0;
+        盈亏平衡ACOS = Math.max(0, 盈亏平衡ACOS);
+        
+        let 纯利润颜色 = 单价纯利润_美元 >= 0 ? "pos" : "neg";
+        let 投产比颜色 = 投产比 >= 120 ? "pos" : (投产比 >= 80 ? "warm" : "neg");
+        let 单价去广告利润颜色 = 单价纯利润_去广告 >= 0 ? "pos" : "neg";
+        let 去广告投产比颜色 = 去广告投产比 >= 100 ? "pos" : (去广告投产比 >= 70 ? "warm" : "neg");
+        
+        let 库存提醒 = "";
+        if(库存周转周数 > STORAGE_WARNING_WEEKS) {
+            库存提醒 = `<div class="stock-warning">⚠️ 库存周转${库存周转周数}周 > ${STORAGE_WARNING_WEEKS}周，实际仓储成本已${库存周转系数}倍计算</div>`;
+        } else if(库存周转周数 < 4) {
+            库存提醒 = `<div class="stock-warning">⚠️ 库存周转${库存周转周数}周 < 4周，可能触发低库存水平费（已加收50%仓储费）</div>`;
+        }
+        
+        // ========== 核心修改：移除ACOS/TACOS加粗，调整提示文本 ==========
+        document.getElementById("result").innerHTML = `
+<div class="section">
+<div class="section-title">📦 物流成本</div>
+<div class="row"><span class="tip-text">尺寸类型</span><span class="highlight">${尺寸类型}</span></div>
+<div class="row"><span class="tip-text">计费重量</span><span>${计费重_kg.toFixed(2)} kg / ${计费重_磅.toFixed(2)} lb → 进位后 ${计费重_磅_进位.toFixed(2)} lb</span></div>
+<div class="row"><span class="tip-text">头程运费</span><span>¥${头程_人民币.toFixed(2)} ($${头程_美元.toFixed(2)})</span></div>
+<div class="row"><span class="tip-text">FBA配送费(含燃油/旺季/低价补贴)</span><span>$${FBA_美元.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">入库配置费</span><span class="tip-text">$${入库配置费.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">月度仓储费(含库存系数)</span><span>$${仓储费_美元.toFixed(2)}</span></div>
+${库存提醒}
+</div>
+<div class="section">
+<div class="section-title">💰 利润核算</div>
+<div class="row"><span class="tip-text">退货率</span><span>${(退货率*100).toFixed(1)}<span class="unit">%</span></span></div>
+<div class="row"><span class="tip-text">退货处理费</span><span>$${RETURN_PROCESS_FEE.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">退货单件损耗</span><span>$${单件退货损失.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">折后售价</span><span>$${折后售价.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">单件总成本</span><span>$${(采购_美元+头程_美元+FBA_美元+仓储费_美元+佣金_美元+RETURN_PROCESS_FEE).toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">单件纯利润</span><span class="${纯利润颜色}">$${单价纯利润_美元.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">销售利润率</span><span>${销售利润率.toFixed(2)}<span class="unit">%</span></span></div>
+<div class="row"><span class="tip-text">投产比 (利润/硬成本)</span><span class="${投产比颜色}">${投产比.toFixed(1)}<span class="unit">%</span></span></div>
+<div class="row"><span class="tip-text">保本最低售价</span><span class="highlight">$${保底售价.toFixed(2)}</span></div>
+</div>
+<div class="section">
+<div class="section-title">📈 流量 & 广告预测</div>
+<!-- 原有广告数据 -->
+<div class="row"><span class="tip-text">广告点击</span><span>${广告点击.toFixed(1)}<span class="unit">次/日</span></span></div>
+<div class="row"><span class="tip-text">自然点击</span><span>${自然点击.toFixed(1)}<span class="unit">次/日</span></span></div>
+<div class="row"><span class="tip-text">总点击量</span><span>${总点击.toFixed(1)}<span class="unit">次/日</span></span></div>
+<div class="row"><span class="tip-text">每单需点击</span><span>${每单需点击.toFixed(0)}<span class="unit">次</span></span></div>
+<div class="row"><span class="tip-text">日出单量</span><span>${日出单量.toFixed(2)}<span class="unit">单</span></span></div>
+<div class="row"><span class="tip-text">单件纯利(扣除广告)</span><span class="${单价去广告利润颜色}">$${单价纯利润_去广告.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">日利润(去广告)</span><span>$${日利润_去广告.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">去广告投产比</span><span class="${去广告投产比颜色}">${去广告投产比.toFixed(1)}<span class="unit">%</span></span></div>
+<!-- 修改：移除ACOS加粗，简化提示文本 -->
+<div class="row">
+    <span class="tip-text">ACOS</span>
+    <span class="acos-tip ${acosColor}" data-tip="${adSuggestion}">
+        ${ACOS.toFixed(1)}%
+        <span class="acos-icon ${acosColor}">!</span>
+    </span>
+</div>
+<!-- 新增：移除TACOS加粗，提示文本仅保留优秀/良好/警戒/危险 -->
+<div class="row">
+    <span class="tip-text">TACOS</span>
+    <span class="tacos-tip ${tacosColor}" data-tip="${tacosTipText}">
+        ${TACOS.toFixed(1)}%
+        <span class="tacos-icon ${tacosColor}">!</span>
+    </span>
+</div>
+</div>
+        `;
+        
+        bindResultTip();
+        document.getElementById("chartWrap").style.display = "block";
+        renderChart(采购_美元, 头程_美元, FBA_美元, (仓储费_美元+佣金_美元+RETURN_PROCESS_FEE), 单价纯利润_美元);
+        
+    } catch (e) {
+        console.error("计算错误：", e);
+        document.getElementById("result").innerHTML = `<div class="section"><div class="section-title">⚠️ 计算出错</div><div class="row">请检查输入是否为数字：${e.message}</div></div>`;
+        document.getElementById("chartWrap").style.display = "none";
+    }
+}
+
+function renderChart(c1, c2, c3, c4, profit){
+    try {
+        const ctx = document.getElementById("costChart").getContext("2d");
+        if(!ctx) return;
+        
+        if (costChart) costChart.destroy();
+        
+        const profitColor = profit >= 0 ? "#00a86b" : "#e53935";
+        
+        costChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["采购成本", "头程费用", "FBA费用", "仓储+佣金+退货费", "单件纯利润"],
+                datasets: [{
+                    data: [c1, c2, c3, c4, profit],
+                    backgroundColor: ["#3b82f6","#6c757d","#f59e0b","#9c27b0",profitColor],
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(2)}` } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(226, 232, 240, 0.5)' },
+                        title: { display: true, text: '金额 (美元)', color: '#4a5568' }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.error("图表渲染错误：", e);
+    }
+}
+</script>
+</body>
+</html>
