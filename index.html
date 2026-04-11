@@ -11,15 +11,17 @@
 body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:20px;min-height:100vh}
 .wrap{max-width:1200px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;align-content:flex-start;width:100%;padding:0}
 
-/* 响应式布局 */
+/* 响应式布局 - 核心修复 */
 @media(max-width:768px){
   .wrap{flex-direction:column;gap:20px}
   .form-row-three{grid-template-columns:1fr 1fr}
   .form-row-three .item:nth-child(3){grid-column:1/-1}
   .form-row-four,.form-row-five{grid-template-columns:1fr 1fr}
-  .input-card,.result-card{padding:20px;max-width:100%;flex:none;width:100%;min-height:auto;height:auto}
+  .input-card,.result-card{padding:20px;max-width:100%;flex:none;width:100%;min-height:auto !important;height:auto !important}
   .title{font-size:18px;margin-bottom:20px;height:auto}
-  .card{width:100%;min-height:auto;height:auto}
+  .card{width:100%;min-height:auto !important;height:auto !important}
+  .result-card{overflow-y:visible !important}
+  .dimension-group{padding:12px}
 }
 
 /* 卡片样式优化 */
@@ -454,7 +456,7 @@ button:active{transform:translateY(0)}
 }
 .lock-icon:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(64, 150, 255, 0.4);
+  box-shadow:0 6px 16px rgba(64, 150, 255, 0.4);
   background: linear-gradient(145deg, #4a9dff, #3082e6);
 }
 .lock-tooltip {
