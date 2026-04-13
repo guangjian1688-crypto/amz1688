@@ -415,7 +415,7 @@ button:active{transform:translateY(0)}
 .lock-icon-container:hover .lock-tooltip { display:block; }
 
 /* ACOS/TACOS提示样式 */
-.acos-tip, .tacos-tip {position:relative;cursor:help;display:inline-flex;align-items:center;}
+.acos-tip, .tacos-tip {position:relative;display:inline-flex;align-items:center;cursor:help;}
 .tacos-tip {font-weight:bold;}
 .acos-icon, .tacos-icon {
   display:inline-block;width:14px;height:14px;border-radius:50%;
@@ -1224,22 +1224,14 @@ t.style.display="block";
 }
 function _ath(e) {
 const t=document.getElementById("formulaTip");if(!t)return;
-if (_h.formula_unlocked) {
-t.innerText = _h.fm_decrypt["ACOS"] || this.dataset.tip || "ACOS计算公式";
-} else {
-t.innerText = _h.fm_encrypt["ACOS"] || this.dataset.tip || "参数说明";
-}
+t.innerText = this.dataset.tip || "ACOS建议";
 t.style.left=(e.clientX+10)+"px";
 t.style.top=(e.clientY-5)+"px";
 t.style.display="block";
 }
 function _tth(e) {
 const t=document.getElementById("formulaTip");if(!t)return;
-if (_h.formula_unlocked) {
-t.innerText = _h.fm_decrypt["TACOS"] || this.dataset.tip || "TACOS计算公式";
-} else {
-t.innerText = _h.fm_encrypt["TACOS"] || this.dataset.tip || "参数说明";
-}
+t.innerText = this.dataset.tip || "TACOS建议";
 t.style.left=(e.clientX+10)+"px";
 t.style.top=(e.clientY-5)+"px";
 t.style.display="block";
@@ -1364,7 +1356,7 @@ let TS=parseFloat((ORD_D*DSP).toFixed(2));
 let ACOS=DSP>0&&CVR>0?parseFloat(((CPC/CVR)/DSP*100).toFixed(1)):0;
 let TACOS=TS>0&&B>0?parseFloat(((B/TS)*100).toFixed(1)):0;
 let AC_C="warm",ADS="未设置广告预算";
-if(B>0&&DSP>0){let d=ACOS-SPR;AC_C=d<-1?"pos":Math.abs(d)<=1?"warm":"neg";ADS=d<-1?"广告盈利，加预算":Math.abs(d)<=1?"广告平衡，优化转化":"广告亏损，降CPC";}
+if(B>0&&DSP>0){let d=ACOS-SPR;AC_C=d<-1?"pos":Math.abs(d)<=1?"warm":"neg";ADS=d<-1?"广告正在盈利，建议增加广告预算":Math.abs(d)<=1?"广告盈亏平衡，建议提升转化率或降低 CPC 出价":"广告正在亏损，建议降低 CPC 出价并优化 Listing";}
 let TL=TACOS<10?"excellent":TACOS<=15?"good":TACOS<=25?"warning":"poor";
 let CPC_COST=ORD_D>0?parseFloat((B/ORD_D).toFixed(4)):0;
 let PPF_NA=parseFloat((PPF_USD-CPC_COST).toFixed(4));
