@@ -665,7 +665,6 @@ select{
 </div>
 <div id="formulaTip" class="tooltip"></div>
 
-<!-- 以下完整原样保留了所有的业务逻辑脚本，未做任何修改与缩减 -->
 <script>
 // 哈希映射表
 const _h = {
@@ -679,7 +678,8 @@ rpfg: 2.20,
 psp: 0.25,
 rfc: 5,
 sww: 22,
-ord: ["unitType","l","w","h","m","shipPrice","cost","price","categoryType","cpc","budget","naturalRate","cvr","discount","returnRate","rateEx","rateCom","placementType","inventoryCycle","peakSeason"],
+// 重新定义回车跳转顺序：从长开始，跳过入库库存方式，直达计算按钮
+ord: ["l","w","h","m","shipPrice","cost","price","cpc","budget","naturalRate","cvr","discount","returnRate","rateEx","calcBtn"],
 fm_encrypt: {
 "退货率":"A1-B2-C3-D4-E5-F6",
 "退货处理费":"X9-Y8-Z7-W6-V5-U4",
@@ -1176,7 +1176,8 @@ e.preventDefault();
 e.stopPropagation();
 const cid = this.id;
 const cidx = _h.ord.indexOf(cid);
-if (cidx === _h.ord.length-1) {_cal();return;}
+if (cidx === -1) return; // 不在预设跳跃列表中的元素不处理
+if (cidx === _h.ord.length-1) {_cal();return;} // 最后一个直接计算
 const nid = _h.ord[cidx+1];
 const nel = document.getElementById(nid);
 if(nel) {nel.focus(); if(nel.tagName==='INPUT')nel.select();}
@@ -1379,7 +1380,6 @@ ${IR}
 </div>
 <div class="section">
 <div class="section-title">💰 利润核算</div>
-<div class="row"><span class="tip-text">类目退货规则</span><span>${isClothing ? '按重量收费' : `阈值${_h.rt}%`}<span class="unit">${isClothing ? '' : '%'}</span></span></div>
 <div class="row"><span class="tip-text">退货率</span><span>${(RR*100).toFixed(1)}<span class="unit">%</span></span></div>
 <div class="row"><span class="tip-text">退货处理费</span><span>$${RPF.toFixed(2)}</span></div>
 <div class="row"><span class="tip-text">退货单件损耗</span><span>$${RLL.toFixed(2)}</span></div>
