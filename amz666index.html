@@ -2,26 +2,107 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>亚马逊利润计算器 | 2026官方全规则同步</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* 基础重置与全局样式 */
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,sans-serif;margin:0;padding:0}
-body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:20px;min-height:100vh}
+body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min-height:100vh}
 .wrap{max-width:1200px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;align-content:flex-start;width:100%;padding:0}
 
 /* 响应式布局 - 核心修复 */
 @media(max-width:768px){
-  .wrap{flex-direction:column;gap:20px}
+  .wrap{flex-direction:column;gap:20px;width:100%;padding:0}
   .form-row-three{grid-template-columns:1fr 1fr}
   .form-row-three .item:nth-child(3){grid-column:1/-1}
   .form-row-four,.form-row-five{grid-template-columns:1fr 1fr}
-  .input-card,.result-card{padding:20px;max-width:100%;flex:none;width:100%;min-height:auto !important;height:auto !important}
+  /* 移动端卡片样式修复 */
+  .input-card,.result-card{
+    padding:20px !important;
+    max-width:100% !important;
+    flex:none !important;
+    width:100% !important;
+    min-height:auto !important;
+    height:auto !important;
+    box-sizing:border-box !important;
+  }
   .title{font-size:18px;margin-bottom:20px;height:auto}
-  .card{width:100%;min-height:auto !important;height:auto !important}
-  .result-card{overflow-y:visible !important}
+  .card{
+    width:100% !important;
+    min-height:auto !important;
+    height:auto !important;
+    padding:20px !important;
+  }
+  .result-card{
+    overflow-y:visible !important;
+    height:auto !important;
+    max-height:calc(100vh - 40px) !important;
+    overflow-y:auto !important;
+  }
   .dimension-group{padding:12px}
+  
+  /* 移动端表单布局优化 */
+  .category-form-row {
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+  .form-row {
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+  .unit-select-row {
+    margin-bottom:16px !important;
+  }
+  .unit-select-item {
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    gap:8px !important;
+  }
+  .unit-select {
+    max-width:100% !important;
+    width:100% !important;
+  }
+  
+  /* 移动端输入框样式优化 */
+  input, select, .category-input, .category-select {
+    height:44px !important;
+    padding:12px 14px !important;
+    font-size:16px !important;
+  }
+  
+  /* 移动端按钮样式优化 */
+  button {
+    height:50px !important;
+    font-size:17px !important;
+    padding:0 !important;
+  }
+  
+  /* 移动端间距优化 */
+  .form-group-title {
+    margin:16px 0 10px 0 !important;
+  }
+  .category-group-title {
+    margin:16px 0 12px 0 !important;
+  }
+  .section {
+    margin-top:16px !important;
+    padding:16px !important;
+  }
+  .row {
+    padding:8px 10px !important;
+    margin:4px 0 !important;
+    font-size:15px !important;
+  }
+  
+  /* 移动端图表优化 */
+  .chart-box {
+    padding:16px !important;
+    margin-top:16px !important;
+  }
+  #costChart {
+    height:240px !important;
+  }
 }
 
 /* 卡片样式优化 */
