@@ -458,8 +458,10 @@ select{
 
 /* ================= 核心响应式修复方案 ================= */
 @media(max-width:992px){
-  .wrap{flex-direction:column; align-items: stretch;}
-  .card{flex: 1 1 100%; max-width:100%; min-width: 0; padding: 20px;}
+  /* 强制采用 block 上下排布，解决卡片重叠、手机端并排、截断的问题 */
+  .wrap{display: block; width: 100%;} 
+  .card{display: block; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 0 20px 0 !important; padding: 20px;}
+  .card:last-child{margin-bottom: 0 !important;}
   .form-row, .category-form-row, .dimension-group .form-row{grid-template-columns: 1fr 1fr !important; gap:12px;}
   .form-row-three{grid-template-columns: 1fr 1fr !important;}
   .form-row-three .item:last-child{grid-column: span 2;}
@@ -473,7 +475,7 @@ select{
   .title{font-size:18px; margin-bottom:16px;}
   input, select, .category-select, .category-input, button{font-size:16px !important;} /* iOS防缩放关键修复 */
   .category-group-title{font-size:15px;}
-  .card{padding: 16px;}
+  .card{padding: 16px; margin: 0 0 16px 0 !important;}
   .unit-select-item {flex-wrap:wrap;gap:8px;}
   .unit-select{max-width:100%;width:100%;}
   .result-card .row{flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px;}
