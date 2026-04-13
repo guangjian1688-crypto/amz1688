@@ -8,6 +8,12 @@
 <style>
 /* 基础重置与全局样式 */
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,sans-serif;margin:0;padding:0}
+/* 全局防止横向滚动 */
+html, body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  padding-bottom: env(safe-area-inset-bottom) !important; /* iOS安全区域适配 */
+}
 body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min-height:100vh}
 .wrap{max-width:1200px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;align-content:flex-start;width:100%;padding:0}
 
@@ -19,7 +25,7 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min
     gap:20px !important;
     width:100% !important;
     padding:0 !important;
-    display:flex !important;
+    display:flex !important; /* 确保display属性 */
     min-height: auto !important;
   }
   
@@ -89,13 +95,15 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min
     width: 100% !important;
   }
   
-  /* 输入框/选择框样式优化 */
+  /* 输入框/选择框样式优化 - 添加iOS适配 */
   input, select, .category-input, .category-select {
     height:44px !important;
     padding:12px 14px !important;
     font-size:16px !important;
     width:100% !important;
     min-width: 0 !important;
+    -webkit-appearance: none !important; /* iOS移除默认样式 */
+    border-radius: 12px !important; /* iOS手动声明圆角 */
   }
   
   /* 按钮样式优化 */
@@ -145,12 +153,13 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min
     width: 100% !important;
   }
   
-  /* 图表区域优化 */
+  /* 图表区域优化 - 修复iOS Canvas高度问题 */
   .chart-box {
     padding:16px !important;
     margin-top:16px !important;
     width:100% !important;
     box-sizing:border-box !important;
+    min-height: 250px !important; /* iOS Canvas最小高度 */
   }
   
   #costChart {
@@ -200,12 +209,6 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e4eaf5 100%);padding:16px;min
     margin:10px 0 15px 0 !important;
     width: 100% !important;
     justify-content: center !important;
-  }
-
-  /* 修复移动端横向滚动问题 */
-  html, body {
-    overflow-x: hidden !important;
-    width: 100% !important;
   }
 
   /* 修复结果行文字溢出 */
@@ -414,6 +417,7 @@ input,select{
   height:44px;
   box-sizing:border-box;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  -webkit-appearance: none; /* 全局iOS样式重置 */
 }
 /* 新增：类目选择框样式 */
 .category-select {
@@ -428,6 +432,7 @@ input,select{
   height:40px;
   box-sizing:border-box;
   appearance:none;
+  -webkit-appearance: none; /* iOS样式重置 */
   background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C0C4CC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat:no-repeat;
   background-position:right 12px center;
@@ -449,6 +454,7 @@ input,select{
   transition:all 0.2s ease;
   height:40px;
   box-sizing:border-box;
+  -webkit-appearance: none; /* iOS样式重置 */
 }
 .category-input:focus {
   border-color:#4096ff;
@@ -480,6 +486,7 @@ button{
   transition:all 0.3s ease;
   box-shadow:0 4px 12px rgba(64,150,255,0.25);
   letter-spacing: 0.5px;
+  -webkit-appearance: none; /* iOS按钮样式重置 */
 }
 button:hover{
   transform:translateY(-2px);
@@ -589,8 +596,9 @@ button:active{transform:translateY(0)}
   box-shadow:0 4px 16px rgba(0,0,0,0.05);
   box-sizing:border-box;
   background: linear-gradient(145deg, #ffffff, #fafbfc);
+  min-height: 250px; /* 全局Chart容器最小高度 */
 }
-#costChart{width:100% !important;height:260px !important}
+#costChart{width:100% !important;height:260px !important;min-height: 200px !important;}
 
 /* 单位文本 */
 .unit{margin-left:4px;font-size:12px;color:#718096;font-weight:normal}
@@ -714,6 +722,7 @@ button:active{transform:translateY(0)}
   padding:0;margin:0;
   box-shadow:0 1px 3px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
+  -webkit-appearance: none; /* iOS按钮样式重置 */
 }
 .close-btn:hover {
   background-color:#e53935;
@@ -800,6 +809,7 @@ button:active{transform:translateY(0)}
 /* 下拉框自定义样式 */
 select{
   appearance:none;
+  -webkit-appearance: none; /* iOS下拉框样式重置 */
   background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat:no-repeat;
   background-position:right 12px center;
