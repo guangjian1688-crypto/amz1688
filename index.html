@@ -523,32 +523,43 @@ select{
 <div class="category-label">所属类目</div>
 <select id="categoryType" class="category-select">
 <option value="default" selected>请选择类目</option>
+<option value="home_kitchen">家居与厨房 (Home & Kitchen)</option>
+<option value="pet_supplies">宠物用品 (Pet Supplies)</option>
+<option value="toys_games">玩具与游戏 (Toys & Games)</option>
+<option value="sports">运动与户外 (Sports & Outdoors)</option>
+<option value="office">办公用品 (Office Products)</option>
+<option value="tools">工具与家居装修 (Tools & Home Improvement)</option>
+<option value="lawn_garden">草坪与花园 (Lawn & Garden)</option>
+<option value="musical_instruments">乐器与影音制作 (Musical Instruments)</option>
+<option value="luggage">箱包、背包与手提包 (Luggage & Bags)</option>
+<option value="footwear">鞋靴 (Footwear)</option>
+<option value="eyewear">眼镜 (Eyewear)</option>
+<option value="mattresses">床垫 (Mattresses)</option>
+<option value="biss">商业、工业和科学用品 (BISS)</option>
+<option value="automotive">汽车与动力运动 (Automotive)</option>
+<option value="power_tools">基础设备电动工具</option>
+<option value="tires">轮胎 (Tires)</option>
+<option value="computers">电脑 (Computers)</option>
+<option value="consumer_electronics">消费电子产品 (Consumer Electronics)</option>
+<option value="large_appliances">大型家电 (Full-size Appliances)</option>
+<option value="game_consoles">视频游戏主机 (Video Game Consoles)</option>
+<option value="video_games_accessories">视频游戏及配件 (Video Games & Accessories)</option>
 <option value="amazon_device_accessories">亚马逊设备配件</option>
-<option value="gift_card">礼品卡</option>
-<option value="jewelry">珠宝首饰</option>
-<option value="art">艺术品</option>
-<option value="clothing">服装与配饰</option>
-<option value="watches">钟表</option>
-<option value="beauty">美妆、个护健康</option>
-<option value="food">食品 (Grocery)</option>
-<option value="baby">婴儿用品</option>
-<option value="electronics_accessories">电子产品配件</option>
-<option value="compact_appliances">紧凑型家电</option>
-<option value="furniture">家具</option>
-<option value="lawn_snow">割草机和铲雪机</option>
-<option value="pet_supplies">宠物用品</option>
-<option value="automotive">汽车用品</option>
-<option value="industrial_scientific">工业与科学用品</option>
-<option value="power_tools">动力工具</option>
-<option value="large_appliances">大型家电</option>
-<option value="electronics">电脑、消费电子</option>
-<option value="game_consoles">视频游戏主机</option>
-<option value="tires">轮胎</option>
-<option value="media">媒介类 (书、DVD)</option>
-<option value="home_kitchen">家居、厨房、户外</option>
-<option value="office_toys">办公用品、玩具</option>
-<option value="sports">运动户外</option>
-<option value="other">一切其他分类</option>
+<option value="clothing">服装与配饰 (Clothing & Accessories)</option>
+<option value="baby">母婴用品 (Baby Products)</option>
+<option value="beauty">美容美妆、健康与个护</option>
+<option value="grocery">食品杂货与美食 (Grocery & Gourmet)</option>
+<option value="furniture">家具 (Furniture)</option>
+<option value="jewelry">珠宝首饰 (Jewelry)</option>
+<option value="compact_appliances">紧凑型家电 (Compact Appliances)</option>
+<option value="lawn_snow">除草机和除雪机</option>
+<option value="electronics_accessories">电子产品配件 (Electronics Accessories)</option>
+<option value="watches">手表 (Watches)</option>
+<option value="art">艺术品 (Fine Art)</option>
+<option value="media">媒介商品 (Media - Books, DVD...)</option>
+<option value="gift_card">礼品卡 (Gift Cards)</option>
+<option value="amazon_explore">亚马逊探索 (Amazon Explore)</option>
+<option value="other">所有其他未分类类目 (Everything Else)</option>
 </select>
 </div>
 <div class="category-item">
@@ -753,31 +764,42 @@ tip_decrypt: {
 formula_unlocked: false,
 categoryData: {
 default: {rate:15, returnThreshold:4.8},
-amazon_device_accessories: {rate:45, returnThreshold:11.3},
-gift_card: {rate:20, returnThreshold:4.8},
-jewelry: {rate:20, returnThreshold:10.8},
-art: {rate:20, returnThreshold:5.6},
-clothing: {rate:17, returnThreshold:0}, // 0表示服装类目，按件收费
-watches: {rate:16, returnThreshold:12.0},
-beauty: {rate:15, returnThreshold:5.5},
-food: {rate:15, returnThreshold:2.9},
-baby: {rate:15, returnThreshold:9.3},
-electronics_accessories: {rate:15, returnThreshold:8.8},
-compact_appliances: {rate:15, returnThreshold:12.6},
-furniture: {rate:15, returnThreshold:9.6},
-lawn_snow: {rate:15, returnThreshold:9.5},
-pet_supplies: {rate:15, returnThreshold:10.2},
-automotive: {rate:12, returnThreshold:9.1},
-industrial_scientific: {rate:12, returnThreshold:4.4},
-power_tools: {rate:12, returnThreshold:7.1},
-large_appliances: {rate:8, returnThreshold:11.9},
-electronics: {rate:8, returnThreshold:11.2},
-game_consoles: {rate:8, returnThreshold:10.7},
-tires: {rate:10, returnThreshold:8.7},
-media: {rate:15, returnThreshold:5.1},
 home_kitchen: {rate:15, returnThreshold:8.1},
-office_toys: {rate:15, returnThreshold:4.4},
+pet_supplies: {rate:15, returnThreshold:10.2},
+toys_games: {rate:15, returnThreshold:4.7},
 sports: {rate:15, returnThreshold:8.7},
+office: {rate:15, returnThreshold:4.4},
+tools: {rate:15, returnThreshold:8.7},
+lawn_garden: {rate:15, returnThreshold:7.7},
+musical_instruments: {rate:15, returnThreshold:9.2},
+luggage: {rate:15, returnThreshold:12.8},
+footwear: {rate:15, returnThreshold:0},
+eyewear: {rate:15, returnThreshold:12.1},
+mattresses: {rate:15, returnThreshold:9.3},
+biss: {rate:12, returnThreshold:6.0},
+automotive: {rate:12, returnThreshold:9.1},
+power_tools: {rate:12, returnThreshold:7.1},
+tires: {rate:10, returnThreshold:8.7},
+computers: {rate:8, returnThreshold:11.4},
+consumer_electronics: {rate:8, returnThreshold:11.2},
+large_appliances: {rate:8, returnThreshold:11.9},
+game_consoles: {rate:8, returnThreshold:10.7},
+video_games_accessories: {rate:15, returnThreshold:6.5},
+amazon_device_accessories: {rate:45, returnThreshold:11.3},
+clothing: {rate:17, returnThreshold:0},
+baby: {rate:15, returnThreshold:9.3},
+beauty: {rate:15, returnThreshold:5.5},
+grocery: {rate:15, returnThreshold:2.9},
+furniture: {rate:15, returnThreshold:9.6},
+jewelry: {rate:20, returnThreshold:10.8},
+compact_appliances: {rate:15, returnThreshold:12.6},
+lawn_snow: {rate:15, returnThreshold:9.5},
+electronics_accessories: {rate:15, returnThreshold:8.8},
+watches: {rate:16, returnThreshold:12.0},
+art: {rate:20, returnThreshold:5.6},
+media: {rate:15, returnThreshold:5.1},
+gift_card: {rate:20, returnThreshold:4.8},
+amazon_explore: {rate:15, returnThreshold:4.8},
 other: {rate:15, returnThreshold:4.8}
 }
 };
@@ -1290,7 +1312,7 @@ let IC = parseFloat(document.getElementById("inventoryCoeff").value) || 1;
 let PS = document.getElementById("peakSeason").value === "true";
 let UT = document.getElementById('unitType').value;
 let categoryType = document.getElementById('categoryType').value;
-let isClothing = categoryType === 'clothing';
+let isClothing = categoryType === 'clothing' || categoryType === 'footwear';
 if(UT === 'imperial'){
 L = (L || 0) * 2.54;
 W = (W || 0) * 2.54;
