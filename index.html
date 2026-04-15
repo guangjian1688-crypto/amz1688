@@ -610,7 +610,10 @@ select{
 </div>
 <div class="form-row">
 <div class="item"><div class="label">转化率(%)</div><input id="cvr" placeholder=""></div>
-<div class="item"></div>
+<div class="item" id="manualOrdersWrap" style="display: none;">
+  <div class="label">预估日均自然单量</div>
+  <input id="manualOrders" placeholder="输入0或大于0的值">
+</div>
 </div>
 <div class="form-group-title">费率相关参数</div>
 <div class="form-row-four">
@@ -624,7 +627,12 @@ select{
 <div class="item"><div class="label">汇率</div><input id="rateEx"></div>
 <div class="item" style="display:none;"><div class="label">佣金比例(%)</div><input id="rateCom_old"></div>
 </div>
-<div class="form-group-title">入库方式&库存周转</div>
+<div class="form-group-title" id="inventoryToggle" style="cursor: pointer;">
+入库方式&库存周转 
+<span style="font-size:12px; font-weight:normal; color:#86909C; margin-left: 4px;">(默认已折叠，点击修改)</span>
+<span id="inventoryToggleIcon" style="margin-left:auto; transition: transform 0.3s; transform: rotate(-90deg); color: #86909C; font-size: 12px;">▼</span>
+</div>
+<div id="inventorySection" style="display: none;">
 <div class="form-row">
 <div class="item">
 <div class="label input-tip" data-tip="X9-Y8-Z7-W6-V5-U4">
@@ -641,7 +649,7 @@ select{
 库存周转区间 <span class="tip-icon">ⓘ</span>
 </div>
 <select id="inventoryCycle">
-<option value="3|1.5">低库存(<4周) - 系数×1.5</option>
+<option value="3|1">低库存(<4周) - 加收费用</option>
 <option value="12|1" selected>合理区间(4-22周) - 系数×1</option>
 <option value="24|2">超龄(22-36周) - 系数×2</option>
 <option value="40|3">严重超龄(>36周) - 系数×3</option>
@@ -662,6 +670,7 @@ select{
 </div>
 <div class="item"></div>
 </div>
+</div>
 <button id="calcBtn">🚀 立即计算</button>
 <div id="warningMessage" class="warm-txt" style="display: none;"></div>
 </div>
@@ -677,20 +686,29 @@ select{
 <div id="formulaTip" class="tooltip"></div>
 
 <script>
+// --- 2026年亚马逊费用规则常量配置 ---
+const CONSTANTS_2026 = {
+    LOW_PRICE_THRESHOLD: 10.00,       // 低价配送费起算标准（按售价）
+    LOW_PRICE_DISCOUNT: 0.77,         // 低价减免费用
+    MEDIA_FEE: 1.80,                  // 媒介类商品附加交易费
+    REFUND_ADMIN_FEE_MIN: 0.30,       // 亚马逊固定退款管理费/每单
+    REFUND_ADMIN_FEE_MAX: 5.00,       // 亚马逊最大退款管理佣金
+    REFUND_ADMIN_RATE: 0.20           // 亚马逊保留佣金的比例 (20%)
+};
+
 // 哈希映射表
 const _h = {
 key: "amz_profit_data",
 rf: 0.30,
-fr: 0.035,
-lpd: 0.86,
+fr: 0, 
+lpd: 0.77, 
 rt: 4.8,
 rpfb: 1.78,
 rpfg: 2.20,
 psp: 0.25,
 rfc: 5,
 sww: 22,
-// 重新定义回车跳转顺序：从长开始，跳过入库库存方式，直达计算按钮
-ord: ["l","w","h","m","shipPrice","cost","price","cpc","budget","naturalRate","cvr","discount","returnRate","rateEx","calcBtn"],
+ord: ["l","w","h","m","shipPrice","cost","price","cpc","budget","naturalRate","cvr","manualOrders","discount","returnRate","rateEx","calcBtn"],
 fm_encrypt: {
 "退货率":"A1-B2-C3-D4-E5-F6",
 "退货处理费":"X9-Y8-Z7-W6-V5-U4",
@@ -700,7 +718,6 @@ fm_encrypt: {
 "单件纯利润":"Z9-X8-C7-V6-B5-N4",
 "销售利润率":"A7-S8-D9-F0-G1-H2",
 "投产比":"J3-K4-L5-Z6-X7-C8",
-"投产比 (利润/硬成本)":"J3-K4-L5-Z6-X7-C8",
 "ACOS":"V9-B8-N7-M6-L5-K4",
 "TACOS":"J1-H2-G3-F4-D5-S6",
 "保本最低售价":"A9-S8-D7-F6-G5-H4",
@@ -715,39 +732,36 @@ fm_encrypt: {
 "每单需点击":"Z5-X6-C7-V8-B9-N0",
 "日出单量":"M1-L2-K3-J4-H5-G6",
 "单件纯利(去广告)":"F7-D8-S9-A0-S1-D2",
-"单件纯利(扣除广告)":"F7-D8-S9-A0-S1-D2",
 "日利润(去广告)":"F3-D4-S5-A6-S7-D8",
 "去广告投产比":"F9-G0-H1-J2-K3-L4",
-"盈亏平衡 ACOS (生死线)":"Z1-X2-C3-V4-B5-N6"
+"盈亏哨兵":"Z1-X2-C3-V4-B5-N6"
 },
 fm_decrypt: {
 "退货率":"退货率超过类目阈值将加收退货处理费；仅均摊退货额外损耗，仓储/基础费用不减免",
 "退货处理费":"服装类按重量分段收费，其他类目仅对超出阈值的退货商品按重量分段收费",
-"退货单件损耗":"(采购+头程全损) + FBA配送费50%损失 + 佣金20%损失(最高$5) + $0.30退款费 + 退货处理费 × 退货率",
-"FBA配送费":"2026.4官方阶梯费率 + 3.5%燃油附加费 + <$10售价减免$0.86 + 10-12月旺季溢价$0.25",
-"单件总成本":"采购+头程+FBA配送费+仓储费+佣金+退货处理费（全额扣除）",
+"退货单件损耗":"(采购+头程全损) + FBA配送费50%损失 + 退款管理费(保留佣金20%最高$5 + $0.30/单) + 退货处理费 × 退货率",
+"FBA配送费":"2026官方阶梯费率（含燃油附加） + <$10售价减免$0.77 + 10-12月旺季溢价$0.25",
+"单件总成本":"采购+头程+FBA配送费+仓储费+佣金+退货处理费+低库存水平费",
 "单件纯利润":"折后售价 - 单件总成本 - 退货单件损耗",
 "销售利润率":"(单件纯利润 ÷ 折后售价) × 100%",
 "投产比":"(单件纯利润×汇率 ÷ (采购+头程人民币成本)) × 100%",
-"投产比 (利润/硬成本)":"(单件纯利润×汇率 ÷ (采购+头程人民币成本)) × 100%",
 "ACOS":"(CPC/转化率) ÷ 折后售价 × 100%",
 "TACOS":"广告总花费 ÷ (广告销售额+自然销售额) × 100%",
-"保本最低售价":"(采购+头程+FBA+仓储+退货损失) ÷ (1 - 佣金比例×(1+0.2×退货率)) ÷ (1-折扣率)",
+"保本最低售价":"(采购+头程+FBA+仓储+退货损失+低库存费) ÷ (1 - 佣金比例×(1+0.2×退货率)) ÷ (1-折扣率)",
 "入库配置费":"多仓分货$0/部分分货(按重量阶梯)/单点入库(按重量阶梯×1.5)",
-"仓储费":"基础仓储费（立方英尺×单价） × 库存周转系数(<4周×1.5/4-22周×1/22-36周×2/>36周×3) + 入库配置费",
+"仓储费":"基础仓储费（立方英尺×单价） × 超龄库存系数(22-36周×2/>36周×3) + 入库配置费",
 "计费重量":"体积重(长×宽×高/6000)与实重取最大值(kg)；体积重(长×宽×高/139)与实重取最大值(lb)",
 "头程运费":"计费重量(kg) × 头程单价(元/kg)",
 "折后售价":"售价 × (1 - 折扣率)",
 "广告点击":"广告日预算 ÷ CPC（单次点击成本）",
-"自然点击":"总点击量 × 自然流量占比；总点击量=广告点击 ÷ (1-自然流量占比)",
-"总点击量":"广告点击 + 自然点击；无自然流量时=广告点击",
-"每单需点击":"1 ÷ 转化率（例：转化率10%则每单需10次点击）",
+"自然点击":"总点击量 × 自然流量占比",
+"总点击量":"广告点击 + 自然点击",
+"每单需点击":"1 ÷ 转化率",
 "日出单量":"总点击量 × 转化率",
 "单件纯利(去广告)":"单件纯利润 - 单均广告花费（广告日预算÷日出单量）",
-"单件纯利(扣除广告)":"单件纯利润 - 单均广告花费（广告日预算÷日出单量）",
 "日利润(去广告)":"(单件纯利润×日出单量) - 广告日预算",
 "去广告投产比":"(日利润(去广告)×汇率 ÷ (硬成本×日出单量)) × 100%",
-"盈亏平衡 ACOS (生死线)":"单件利润 ÷ 折后售价 × 100%，当实际ACOS等于该值时净利润为0"
+"盈亏哨兵":"基于公式：CPC极限 = 单件纯利×转化率÷(1-自然占比)，突破该值将导致亏本"
 },
 tip_encrypt: {
 "return-tip":"A1-B2-C3-D4-E5-F6",
@@ -756,9 +770,9 @@ tip_encrypt: {
 "peakSeason":"S7-T8-U9-V0-W1-X2"
 },
 tip_decrypt: {
-"return-tip":"2026规则：佣金退80%、FBA配送费退50%；服装类按重量收取退货处理费，其他类目超过阈值按重量收取",
-"inventoryCycle":"2026亚马逊仓储费用规则： 1. 库存周转周数<4周：低库存水平，仓储费×1.5倍 2. 库存周转周数4-22周：正常区间，无附加费 3. 库存周转周数22-36周：超龄库存，仓储费×2倍 4. 库存周转周数>36周：严重超龄，仓储费×3倍",
-"placementType":"2026标准： 1. 多仓分货(4+仓库)：免配置费，但头程运费更高 2. 部分分货：按重量阶梯收费（小号标准$0.22/件、大号标准≤1lb$0.45/件、大件$0.65/件） 3. 单点入库：部分分货费用×1.5倍（例：小号标准$0.33/件、大号标准≤1lb$0.45/件）",
+"return-tip":"2026规则：扣除退款管理费、FBA配送费退50%；服装类按重量收取退货处理费，其他类目超过阈值按重量收取",
+"inventoryCycle":"2026规则：1.低库存水平(<4周)：按件加收费用($0.32~$1.10)；2.正常(4-22周)；3.超龄(22-36周)费率×2；4.严重超龄(>36周)费率×3",
+"placementType":"2026标准：1.多仓分货:免配置费；2.部分分货:按重量阶梯收费；3.单点入库:部分分货费用×1.5倍",
 "peakSeason":"勾选则按旺季计算仓储费+FBA旺季溢价$0.25"
 },
 formula_unlocked: false,
@@ -886,6 +900,47 @@ else { fee = 157.35 + ((weightLb - 151) * 0.19); }
 }
 return parseFloat(fee.toFixed(2));
 }
+
+function _bindBudgetMonitor() {
+    const budgetInput = document.getElementById('budget');
+    const moWrap = document.getElementById('manualOrdersWrap');
+    const moInput = document.getElementById('manualOrders');
+    
+    function checkBudget() {
+        const val = budgetInput.value.trim();
+        // 当明确输入为 0 时才显示纯自然单量输入框
+        if (val === '0' || val === '0.0' || val === '0.00') {
+            moWrap.style.display = 'flex';
+        } else {
+            moWrap.style.display = 'none';
+            if (moInput.value) {
+                moInput.value = ''; // 隐藏时清空避免干扰计算
+                _cal();
+            }
+        }
+    }
+    budgetInput.addEventListener('input', checkBudget);
+    budgetInput.addEventListener('change', checkBudget);
+    setTimeout(checkBudget, 200); // 初始检查
+}
+
+function _bindInventoryToggle() {
+    const toggleBtn = document.getElementById('inventoryToggle');
+    const section = document.getElementById('inventorySection');
+    const icon = document.getElementById('inventoryToggleIcon');
+    if(toggleBtn && section && icon) {
+        toggleBtn.addEventListener('click', function() {
+            if(section.style.display === 'none') {
+                section.style.display = 'block';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                section.style.display = 'none';
+                icon.style.transform = 'rotate(-90deg)';
+            }
+        });
+    }
+}
+
 function _u() {
 const s = document.getElementById('unitType');
 const l = {
@@ -902,7 +957,17 @@ l.l.textContent = `长(${m ? '厘米' : '英寸'})`;
 l.w.textContent = `宽(${m ? '厘米' : '英寸'})`;
 l.h.textContent = `高(${m ? '厘米' : '英寸'})`;
 l.m.textContent = `实重(${m ? '千克' : '磅'})`;
-i.forEach(id => document.getElementById(id).value = '');
+i.forEach(id => {
+    let el = document.getElementById(id);
+    if (el.value) {
+        let v = parseFloat(el.value);
+        if (id === 'l' || id === 'w' || id === 'h') {
+            el.value = (m ? v * 2.54 : v / 2.54).toFixed(2);
+        } else if (id === 'm') {
+            el.value = (m ? v / 2.20462 : v * 2.20462).toFixed(2);
+        }
+    }
+});
 _s();
 _cal();
 });
@@ -1066,6 +1131,8 @@ _bilt();
 _bice();
 _u();
 _bindCategory();
+_bindBudgetMonitor(); // 绑定预算输入框监听
+_bindInventoryToggle(); // 绑定入库方式折叠
 document.getElementById('calcBtn').addEventListener('click', _cal);
 setTimeout(() => _cal(), 100);
 }
@@ -1127,6 +1194,9 @@ ie.addEventListener('input', ()=>t.style.display="none");
 function _bif(){
 document.querySelectorAll('input').forEach(i => {
 if(i.type === 'hidden') return;
+if(i.id !== 'passwordInput' && i.id !== 'secondPasswordInput') {
+    i.setAttribute('min', '0');
+}
 i.addEventListener('input', function(){
 if (this.value.trim() === '') {
 this.value = '';
@@ -1198,10 +1268,16 @@ e.preventDefault();
 e.stopPropagation();
 const cid = this.id;
 const cidx = _h.ord.indexOf(cid);
-if (cidx === -1) return; // 不在预设跳跃列表中的元素不处理
-if (cidx === _h.ord.length-1) {_cal();return;} // 最后一个直接计算
-const nid = _h.ord[cidx+1];
-const nel = document.getElementById(nid);
+if (cidx === -1) return;
+
+if (cidx === _h.ord.length-1) {_cal();return;}
+let nidx = cidx + 1;
+let nel = document.getElementById(_h.ord[nidx]);
+// 采用物理尺寸精准判断可见性，跳过被隐藏的元素
+while (nel && (nel.offsetWidth === 0 && nel.offsetHeight === 0) && nidx < _h.ord.length - 1) {
+    nidx++;
+    nel = document.getElementById(_h.ord[nidx]);
+}
 if(nel) {nel.focus(); if(nel.tagName==='INPUT')nel.select();}
 }
 }
@@ -1306,6 +1382,7 @@ let CPC = Math.max(0.01, parseFloat(document.getElementById("cpc").value) || 0.0
 let CVR = Math.min(0.8, Math.max(0, (parseFloat(document.getElementById("cvr").value) || 0) / 100));
 let B = Math.max(0, parseFloat(document.getElementById("budget").value) || 0);
 let NRF = Math.min(0.99, Math.max(0, (parseFloat(document.getElementById("naturalRate").value) || 0) / 100));
+let manualOrders = Math.max(0, parseFloat(document.getElementById("manualOrders").value) || 0);
 let PT = document.getElementById("placementType").value;
 let IW = Math.max(1, parseFloat(document.getElementById("inventoryWeeks").value) || 12);
 let IC = parseFloat(document.getElementById("inventoryCoeff").value) || 1;
@@ -1313,68 +1390,153 @@ let PS = document.getElementById("peakSeason").value === "true";
 let UT = document.getElementById('unitType').value;
 let categoryType = document.getElementById('categoryType').value;
 let isClothing = categoryType === 'clothing' || categoryType === 'footwear';
+
 if(UT === 'imperial'){
 L = (L || 0) * 2.54;
 W = (W || 0) * 2.54;
 H = (H || 0) * 2.54;
 M = (M || 0) / 2.20462;
 }
+
 const WD = document.getElementById("warningMessage");
 let WNs = [];
-if(B === 0 && NRF > 0){WNs.push("广告预算为0，自然流量无效");}
+
+let IL=parseFloat((L/2.54).toFixed(4)),IWd=parseFloat((W/2.54).toFixed(4)),IH=parseFloat((H/2.54).toFixed(4));
+let SA=[IL,IWd,IH].filter(v=>v>0).sort((a,b)=>b-a);while(SA.length<3)SA.push(0);
+let Lg=SA[0]||0,Md=SA[1]||0,Sh=SA[2]||0;
+let Wlb=parseFloat((M*2.20462).toFixed(4)),Vlb=parseFloat(((IL*IWd*IH)/139).toFixed(4));
+
+// --- 计费重量逻辑完善 (2026规则，细化大件/超大件) ---
+let ISS=Lg<=15&&Md<=12&&Sh<=0.75&&Wlb<=1;
+let ILS=Lg<=18&&Md<=14&&Sh<=8&&Wlb<=20&&!ISS;
+let ILB=Lg<=59&&Md<=33&&Sh<=33&&Wlb<=50&&((Lg+(Md+Sh)*2)<=130)&&!ISS&&!ILS;
+let ST=ISS?"小号标准":ILS?"大号标准":ILB?"大型超标准":"超大件";
+
+let CWlb = Wlb;
+if(ISS) {
+    CWlb = Wlb; // 小号标准仅按实重计费
+} else if(ILS) {
+    CWlb = Wlb > 0.75 ? Math.max(Wlb, Vlb) : Wlb; // 大号标准超过0.75磅才对比体积重
+} else {
+    CWlb = Math.max(Wlb, Vlb); // 大件及以上产品对比体积重
+}
+let CWlbR=CWlb<=1?Math.ceil(CWlb/0.25)*0.25:Math.ceil(CWlb);
+CWlbR=parseFloat(CWlbR.toFixed(2));
+
+let lowInvFee = 0;
+if(IW < 4) {
+  if(ISS) lowInvFee = 0.32;
+  else if(ILS) lowInvFee = 0.47;
+  else lowInvFee = 1.11; // 2026年大件同样收取低库存费
+}
+
+if(B === 0 && manualOrders === 0){WNs.push("广告预算与预估自然单量均为0，已关闭订单预测（单件利润核算不受影响）。");}
 if(D >= 1){WNs.push("折扣率不能≥100%，已自动限制为95%"); D=0.95;}
 if(RR * 100 > _h.rt && _h.rt !== 100){WNs.push(`退货率超过类目阈值${_h.rt}%，加收退货处理费`);}
 if(_h.rt === 100){WNs.push("服装类目按重量分段收取退货处理费");}
 if(IW > _h.sww){WNs.push(`库存周转超过${_h.sww}周，仓储费翻倍`);}
-if(IW < 4){WNs.push(`库存周转低于4周，触发低库存费用`);}
-WD&&(WNs.length>0?(WD.style.display="block",WD.innerText="⚠️ "+WNs.join("，")):(WD.style.display="none"));
+if(IW < 4){WNs.push(`低库存周转，加收单件费用 $${lowInvFee}`);}
+WD&&(WNs.length>0?(WD.style.display="block",WD.innerText="⚠️ "+WNs.join("\n⚠️ ")):(WD.style.display="none"));
+
 if(USD_P <= 0){document.getElementById("result").innerHTML=`<div class="section"><div class="section-title">⚠️ 错误</div><div class="row">售价必须大于0</div></div>`;document.getElementById("chartWrap").style.display="none";return;}
-let IL=parseFloat((L/2.54).toFixed(4)),IWd=parseFloat((W/2.54).toFixed(4)),IH=parseFloat((H/2.54).toFixed(4));
-let SA=[IL,IWd,IH].filter(v=>v>0).sort((a,b)=>b-a);while(SA.length<3)SA.push(0);
-let Lg=SA[0]||0,Md=SA[1]||0,Sh=SA[2]||0;
-let Wlb=parseFloat((M*2.20462).toFixed(4)),Vlb=parseFloat(((IL*IWd*IH)/139).toFixed(4)),CWlb=Math.max(Wlb,Vlb);
-let CWlbR=CWlb<=1?Math.ceil(CWlb/0.25)*0.25:Math.ceil(CWlb);CWlbR=parseFloat(CWlbR.toFixed(2));
-let ISS=Lg<=15&&Md<=12&&Sh<=0.75&&CWlbR<=1;
-let ILS=Lg<=18&&Md<=14&&Sh<=8&&CWlbR<=20&&!ISS;
-let IO=!ISS&&!ILS;
-let ST=ISS?"小号标准":ILS?"大号标准":"大件/超大";
+
 let Vcf=parseFloat(((L*W*H)/28316.8).toFixed(6));
-let SR=ST!=="大件/超大"?(PS?2.40:0.78):(PS?1.40:0.52);
-let BS=parseFloat((Vcf*SR*IC).toFixed(4));
-let IFB=ST==="小号标准"?0.22:ST==="大号标准"?(CWlbR<=1?0.30:0.45):0.65;
+let SR=ST!=="大型超标准"&&ST!=="超大件"?(PS?2.40:0.78):(PS?1.40:0.52);
+let BS=parseFloat((Vcf*SR*(IW < 4 ? 1 : IC)).toFixed(4)); 
+let IFB=ST==="小号标准"?0.22:ST==="大号标准"?(CWlb<=1?0.30:0.45):0.65;
 let IPF=PT==="partial"?IFB:PT==="single"?parseFloat((IFB*1.5).toFixed(2)):0;
 let SF_USD=parseFloat((BS+IPF).toFixed(4));
+
 let FB=0,DSP=parseFloat((USD_P*(1-D)).toFixed(2));
-if(ISS){if(CWlbR<=0.25)FB=3.10;else if(CWlbR<=0.5)FB=3.18;else FB=3.37;}
-else if(ILS){const t=[0.25,3.75,0.5,3.85,1,4.08,1.5,4.65,2,5.58,3,5.80,4,6.02,5,6.24,6,6.46,7,6.68,8,6.90,9,7.12,10,7.34,11,7.56,12,7.78,13,8.00,14,8.22,15,8.44,16,8.66,17,8.88,18,9.10,19,9.32,20,9.54];
-for(let i=0;i<t.length;i+=2){if(CWlbR<=t[i]){FB=t[i+1];break;}}FB=FB||9.54;}
-else{FB=CWlbR<=1?9.98:CWlbR<=2?10.43:CWlbR<=3?10.88:CWlbR<=4?11.33:CWlbR<=5?11.78:parseFloat((11.78+(CWlbR-5)*0.45).toFixed(2));}
-if(DSP>0&&DSP<10)FB=Math.max(0,parseFloat((FB-_h.lpd).toFixed(2)));
-if(PS)FB+=_h.psp;
-let FBA_USD=parseFloat((FB*(1+_h.fr)).toFixed(4));
+
+// 2026.4 最新 FBA 费率表 (包含燃油附加)
+if (isClothing) {
+    if (ISS) {
+        if (CWlb <= 0.25) FB = 3.55; 
+        else if (CWlb <= 0.5) FB = 3.68;
+        else FB = 3.92;
+    } else if (ILS) {
+        const t_cloth = [0.25, 4.25, 0.5, 4.47, 1, 4.92, 1.5, 5.59, 2, 6.29, 3, 6.60, 4, 6.89, 5, 7.18];
+        for (let i = 0; i < t_cloth.length; i += 2) {
+            if (CWlb <= t_cloth[i]) { FB = t_cloth[i+1]; break; }
+        }
+        if(!FB) FB = 7.18 + Math.ceil(Math.max(0, CWlb - 5)) * 0.45;
+    } else {
+        FB = 10.74 + Math.ceil(Math.max(0, CWlb - 1)) * 0.45;
+    }
+} else {
+    if (ISS) {
+        if (CWlb <= 0.25) FB = 3.21;
+        else if (CWlb <= 0.5) FB = 3.29;
+        else FB = 3.49;
+    } else if (ILS) {
+        const t = [0.25, 3.88, 0.5, 3.98, 1, 4.22, 1.5, 4.81, 2, 5.78, 3, 6.00, 4, 6.23, 5, 6.46];
+        for (let i = 0; i < t.length; i += 2) {
+            if (CWlb <= t[i]) { FB = t[i+1]; break; }
+        }
+        if(!FB) FB = 6.46 + Math.ceil(Math.max(0, CWlb - 5)) * 0.45;
+    } else if (ST === "大型超标准") {
+        FB = 9.61 + Math.ceil(Math.max(0, CWlb - 1)) * 0.38;
+    } else {
+        FB = 26.33 + Math.ceil(Math.max(0, CWlb - 1)) * 0.38;
+    }
+}
+
+// 修正低价减免为 $0.77 (2026规则，按售价USD_P而非折后价DSP判定)
+if (USD_P > 0 && USD_P < CONSTANTS_2026.LOW_PRICE_THRESHOLD) {
+    FB = Math.max(0, parseFloat((FB - CONSTANTS_2026.LOW_PRICE_DISCOUNT).toFixed(2)));
+}
+if (PS) FB += _h.psp;
+
+let FBA_USD = parseFloat(FB.toFixed(4)); 
 let CWkg=parseFloat(Math.max(M,(L*W*H)/6000).toFixed(4));
 let SH_CNY=parseFloat((CWkg*SP).toFixed(2)),SH_USD=parseFloat((SH_CNY/EX).toFixed(4));
-let C_USD=parseFloat((CNY_C/EX).toFixed(4)),COM_USD=parseFloat((DSP*CR).toFixed(4));
+let C_USD=parseFloat((CNY_C/EX).toFixed(4));
+
+// --- 佣金逻辑完善 (2026规则) ---
+let COM_USD=parseFloat((DSP*CR).toFixed(4));
+if(COM_USD < 0.30 && DSP > 0) COM_USD = 0.30; // 佣金保底 $0.30
+if(categoryType === 'media') COM_USD += CONSTANTS_2026.MEDIA_FEE; // 媒介类商品交易费 $1.80
+
+// 退货损耗：包含亚马逊扣除的退款管理费(20%佣金上限$5 + 0.30单笔交易费)
+let refundAdminFee = Math.min(COM_USD * CONSTANTS_2026.REFUND_ADMIN_RATE, CONSTANTS_2026.REFUND_ADMIN_FEE_MAX);
+let totalRefundAdminFee = parseFloat((refundAdminFee + CONSTANTS_2026.REFUND_ADMIN_FEE_MIN).toFixed(2));
+
 let RPF=0;
 if(isClothing || (RR*100>_h.rt && _h.rt !== 100)){
 RPF = calculateReturnProcessingFee(CWlbR, isClothing, ST);
 }
-let CRF=parseFloat(Math.min(COM_USD*0.2,_h.rfc).toFixed(2));
-let NP=parseFloat((DSP-C_USD-SH_USD-FBA_USD-SF_USD-COM_USD).toFixed(4));
-let RL=parseFloat((C_USD+SH_USD+_h.rf+RPF+CRF+(FBA_USD*0.5)).toFixed(4));
+
+let NP=parseFloat((DSP-C_USD-SH_USD-FBA_USD-SF_USD-COM_USD-lowInvFee).toFixed(4));
+let RL=parseFloat((C_USD+SH_USD+RPF+totalRefundAdminFee+(FBA_USD*0.5)).toFixed(4));
 let RLL=parseFloat((RL*RR).toFixed(4));
 let PPF_USD=parseFloat((NP-RLL).toFixed(4));
 let SPR=DSP>0?parseFloat(((PPF_USD/DSP)*100).toFixed(2)):0;
 let HCC=parseFloat((CNY_C+SH_CNY).toFixed(2));
 let ROI=HCC>0?parseFloat(((PPF_USD*EX/HCC)*100).toFixed(1)):0;
-let CB=parseFloat((C_USD+SH_USD+FBA_USD+SF_USD+RLL).toFixed(4));
+let CB=parseFloat((C_USD+SH_USD+FBA_USD+SF_USD+RLL+lowInvFee).toFixed(4));
 let CF=parseFloat((1-CR*(1+0.2*RR)).toFixed(4));
 let BSP=CF>0&&(1-D)>0?parseFloat((CB/CF/(1-D)).toFixed(2)):9999;
-let AC=parseFloat((B/CPC).toFixed(1)),TF=AC,NC=0;
-if(B>0&&NRF<1){TF=parseFloat((AC/(1-NRF)).toFixed(1));NC=parseFloat((TF*NRF).toFixed(1));}
-let TC=parseFloat((AC+NC).toFixed(1));
+let AC=0,TF=0,NC=0;
+let TC=0, ORD_D=0;
+
+if(B>0 && CPC>0){
+    AC=parseFloat((B/CPC).toFixed(1));
+    TF=AC;
+    if(NRF<1){
+        TF=parseFloat((AC/(1-NRF)).toFixed(1));
+        NC=parseFloat((TF*NRF).toFixed(1));
+    }
+    TC=parseFloat((AC+NC).toFixed(1));
+    ORD_D=parseFloat((TC*CVR).toFixed(2));
+} else if (B === 0 && manualOrders > 0) {
+    ORD_D = manualOrders;
+    TC = CVR > 0 ? parseFloat((ORD_D / CVR).toFixed(1)) : 0;
+    NC = TC;
+    AC = 0;
+}
+
 let CPC_ORD=CVR>0?parseFloat((1/CVR).toFixed(0)):0;
-let ORD_D=parseFloat((TC*CVR).toFixed(2));
 let TS=parseFloat((ORD_D*DSP).toFixed(2));
 let ACOS=DSP>0&&CVR>0?parseFloat(((CPC/CVR)/DSP*100).toFixed(1)):0;
 let TACOS=TS>0&&B>0?parseFloat(((B/TS)*100).toFixed(1)):0;
@@ -1385,10 +1547,50 @@ let CPC_COST=ORD_D>0?parseFloat((B/ORD_D).toFixed(4)):0;
 let PPF_NA=parseFloat((PPF_USD-CPC_COST).toFixed(4));
 let PROF_NA=parseFloat(((PPF_USD*ORD_D)-B).toFixed(2));
 let ROI_NA=HCC>0&&ORD_D>0?parseFloat(((PROF_NA*EX/(HCC*ORD_D))*100).toFixed(1)):0;
-let BE_ACOS=DSP>0?Math.max(0,parseFloat(((PPF_USD/DSP)*100).toFixed(1))):0;
 let PC=PPF_USD>=0?"pos":"neg",RC=ROI>=120?"pos":ROI>=80?"warm":"neg";
 let PC_NA=PPF_NA>=0?"pos":"neg",RC_NA=ROI_NA>=100?"pos":ROI_NA>=70?"warm":"neg";
-let IR=IW>_h.sww?`<div class="stock-warning">⚠️ 库存周转${IW}周超${_h.sww}周，费用×${IC}</div>`:IW<4?`<div class="stock-warning">⚠️ 库存周转${IW}周<4周，加收50%费用</div>`:"";
+
+// 盈利哨兵计算
+let BE_CPC_LIMIT = (PPF_USD > 0 && NRF < 1 && CVR > 0) ? parseFloat((PPF_USD * CVR / (1 - NRF)).toFixed(2)) : 0;
+let BE_CVR_LIMIT = (PPF_USD > 0 && CPC > 0 && NRF < 1) ? parseFloat((CPC * (1 - NRF) / PPF_USD * 100).toFixed(1)) : 0;
+let BE_TEXT = "无";
+if (PPF_USD <= 0) {
+    BE_TEXT = "单件已亏损，无盈利空间";
+} else {
+    BE_TEXT = `CPC > $${BE_CPC_LIMIT.toFixed(2)} 或 转化率 < ${BE_CVR_LIMIT.toFixed(1)}% 将亏本`;
+}
+
+let IR=IW>_h.sww?`<div class="stock-warning">⚠️ 库存周转${IW}周超${_h.sww}周，费用×${IC}</div>`:IW<4?`<div class="stock-warning">⚠️ 低库存水平，每件加收 $${lowInvFee}</div>`:"";
+
+let dailyProfitRowHTML = "";
+let trafficAdHTML = "";
+
+if (B === 0) {
+    if (manualOrders > 0) {
+        dailyProfitRowHTML = `<div class="row"><span class="tip-text">日利润</span><span class="${PC}">$${(PPF_USD * manualOrders).toFixed(2)}</span></div>`;
+    }
+    trafficAdHTML = `
+    <div class="row"><span class="tip-text">自然点击</span><span>${NC.toFixed(1)}次/日</span></div>
+    <div class="row"><span class="tip-text">总点击量</span><span>${TC.toFixed(1)}次/日</span></div>
+    <div class="row"><span class="tip-text">每单需点击</span><span>${CPC_ORD.toFixed(0)}次</span></div>
+    <div class="row"><span class="tip-text">日出单量</span><span>${ORD_D.toFixed(2)}单</span></div>
+    `;
+} else {
+    trafficAdHTML = `
+    <div class="row"><span class="tip-text">广告点击</span><span>${AC.toFixed(1)}次/日</span></div>
+    <div class="row"><span class="tip-text">自然点击</span><span>${NC.toFixed(1)}次/日</span></div>
+    <div class="row"><span class="tip-text">总点击量</span><span>${TC.toFixed(1)}次/日</span></div>
+    <div class="row"><span class="tip-text">每单需点击</span><span>${CPC_ORD.toFixed(0)}次</span></div>
+    <div class="row"><span class="tip-text">日出单量</span><span>${ORD_D.toFixed(2)}单</span></div>
+    <div class="row"><span class="tip-text">单件纯利(去广告)</span><span class="${PC_NA}">$${PPF_NA.toFixed(2)}</span></div>
+    <div class="row"><span class="tip-text">日利润(去广告)</span><span>$${PROF_NA.toFixed(2)}</span></div>
+    <div class="row"><span class="tip-text">去广告投产比</span><span class="${RC_NA}">${ROI_NA.toFixed(1)}%</span></div>
+    <div class="row"><span class="tip-text">ACOS</span><span class="acos-tip ${AC_C}" data-tip="${ADS}">${ACOS.toFixed(1)}%<span class="acos-icon ${AC_C}">!</span></span></div>
+    <div class="row"><span class="tip-text">TACOS</span><span class="tacos-tip ${TL}" data-tip="${TL==='excellent'?'优秀':TL==='good'?'良好':TL==='warning'?'警戒':'危险'}">${TACOS.toFixed(1)}%<span class="tacos-icon ${TL}">!</span></span></div>
+    <div class="row"><span class="tip-text">盈亏哨兵</span><span class="highlight warm">${BE_TEXT}</span></div>
+    `;
+}
+
 document.getElementById("result").innerHTML=`
 <div class="section">
 <div class="section-title">📦 物流成本</div>
@@ -1406,29 +1608,21 @@ ${IR}
 <div class="row"><span class="tip-text">退货处理费</span><span>$${RPF.toFixed(2)}</span></div>
 <div class="row"><span class="tip-text">退货单件损耗</span><span>$${RLL.toFixed(2)}</span></div>
 <div class="row"><span class="tip-text">折后售价</span><span>$${DSP.toFixed(2)}</span></div>
-<div class="row"><span class="tip-text">单件总成本</span><span>$${(C_USD+SH_USD+FBA_USD+SF_USD+COM_USD+RPF).toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">保本最低售价</span><span class="highlight">$${BSP.toFixed(2)}</span></div>
+<div class="row"><span class="tip-text">单件总成本</span><span>$${(C_USD+SH_USD+FBA_USD+SF_USD+COM_USD+RPF+lowInvFee).toFixed(2)}</span></div>
 <div class="row"><span class="tip-text">单件纯利润</span><span class="${PC}">$${PPF_USD.toFixed(2)}</span></div>
+${dailyProfitRowHTML}
 <div class="row"><span class="tip-text">销售利润率</span><span>${SPR.toFixed(2)}<span class="unit">%</span></span></div>
 <div class="row"><span class="tip-text">投产比</span><span class="${RC}">${ROI.toFixed(1)}<span class="unit">%</span></span></div>
-<div class="row"><span class="tip-text">保本最低售价</span><span class="highlight">$${BSP.toFixed(2)}</span></div>
 </div>
 <div class="section">
 <div class="section-title">📈 流量 & 广告预测</div>
-<div class="row"><span class="tip-text">广告点击</span><span>${AC.toFixed(1)}次/日</span></div>
-<div class="row"><span class="tip-text">自然点击</span><span>${NC.toFixed(1)}次/日</span></div>
-<div class="row"><span class="tip-text">总点击量</span><span>${TC.toFixed(1)}次/日</span></div>
-<div class="row"><span class="tip-text">每单需点击</span><span>${CPC_ORD.toFixed(0)}次</span></div>
-<div class="row"><span class="tip-text">日出单量</span><span>${ORD_D.toFixed(2)}单</span></div>
-<div class="row"><span class="tip-text">单件纯利(去广告)</span><span class="${PC_NA}">$${PPF_NA.toFixed(2)}</span></div>
-<div class="row"><span class="tip-text">日利润(去广告)</span><span>$${PROF_NA.toFixed(2)}</span></div>
-<div class="row"><span class="tip-text">去广告投产比</span><span class="${RC_NA}">${ROI_NA.toFixed(1)}%</span></div>
-<div class="row"><span class="tip-text">ACOS</span><span class="acos-tip ${AC_C}" data-tip="${ADS}">${ACOS.toFixed(1)}%<span class="acos-icon ${AC_C}">!</span></span></div>
-<div class="row"><span class="tip-text">TACOS</span><span class="tacos-tip ${TL}" data-tip="${TL==='excellent'?'优秀':TL==='good'?'良好':TL==='warning'?'警戒':'危险'}">${TACOS.toFixed(1)}%<span class="tacos-icon ${TL}">!</span></span></div>
+${trafficAdHTML}
 </div>
 `;
 _brt();
 document.getElementById("chartWrap").style.display="block";
-_rc(C_USD,SH_USD,FBA_USD,parseFloat(SF_USD+COM_USD+RPF),PPF_USD);
+_rc(C_USD,SH_USD,FBA_USD,parseFloat(SF_USD+COM_USD+RPF+lowInvFee),PPF_USD);
 } catch(e){console.error("计算错误：",e);
 document.getElementById("result").innerHTML=`<div class="section"><div class="section-title">⚠️ 计算出错</div></div><div class="row">输入错误：${e.message}</div></div>`;
 document.getElementById("chartWrap").style.display="none";
@@ -1440,7 +1634,7 @@ const ctx=document.getElementById("costChart").getContext("2d");if(!ctx)return;
 _c&&_c.destroy();
 const pc=profit>=0?"#00a86b":"#e53935";
 _c=new Chart(ctx,{type:"bar",data:{
-labels:["采购成本","头程费用","FBA费用","仓储佣金退货","单件纯利润"],
+labels:["采购成本","头程费用","FBA费用","仓储/佣金/杂费","单件纯利润"],
 datasets:[{data:[c1,c2,c3,c4,profit],backgroundColor:["#3b82f6","#6c757d","#f59e0b","#9c27b0",pc],borderRadius:8,barPercentage:0.7}]
 },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:false,tooltip:{callbacks:{label:ctx=>`$${ctx.raw.toFixed(2)}`}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(226,232,240,0.5)'},title:{display:true,text:'金额(美元)',color:'#4a5568'}}}}});
 }catch(e){console.error("图表错误：",e);}
